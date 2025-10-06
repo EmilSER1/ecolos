@@ -124,11 +124,13 @@ export function StaleTab({ deals }: StaleTabProps) {
         {staleDeals.length === 0 ? (
           <p className="text-muted-foreground">Нет сделок более {days} дней без изменений</p>
         ) : (
-          <div className="overflow-auto">
-            <table id="stale-table" className="w-full border-collapse text-xs">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden">
+                <table id="stale-table" className="min-w-full border-collapse text-xs sm:text-sm">
               <thead>
                 <tr>
-                  <th rowSpan={2} className="border border-border bg-muted p-2 text-left font-semibold align-bottom">
+                  <th rowSpan={2} className="border border-border bg-muted p-2 text-left font-semibold align-bottom min-w-[150px] sm:min-w-[200px] sticky left-0 z-10">
                     Ответственный
                   </th>
                   <th colSpan={STAGE_GROUPS.Проектирование.length} className="border border-border bg-stage-proj text-stage-proj-fg p-2 text-center font-semibold">
@@ -146,8 +148,8 @@ export function StaleTab({ deals }: StaleTabProps) {
                 </tr>
                 <tr>
                   {STAGE_ORDER.map((s, i) => (
-                    <th key={s} className={`border border-border ${stageClass(s)} p-2 text-center font-medium text-xs`}>
-                      {i + 1}. {s}
+                    <th key={s} className={`border border-border ${stageClass(s)} p-2 text-center font-medium text-xs min-w-[100px] sm:min-w-[120px]`}>
+                      <div className="whitespace-normal">{i + 1}. {s}</div>
                     </th>
                   ))}
                 </tr>
@@ -155,8 +157,8 @@ export function StaleTab({ deals }: StaleTabProps) {
               <tbody>
                 {tableData.rows.map((row, idx) => (
                   <tr key={idx}>
-                    <th className={`border border-border p-2 text-left ${row.type === "dept" ? "bg-muted font-bold" : row.personClass}`}>
-                      {row.name}
+                    <th className={`border border-border p-2 text-left min-w-[150px] sm:min-w-[200px] sticky left-0 z-10 ${row.type === "dept" ? "bg-muted font-bold" : row.personClass}`}>
+                      <div className="whitespace-normal">{row.name}</div>
                     </th>
                     {STAGE_ORDER.map((s) => {
                       const v = row.counts[s] || 0;
@@ -174,7 +176,9 @@ export function StaleTab({ deals }: StaleTabProps) {
               </tbody>
               <tfoot>
                 <tr>
-                  <th className="border border-border bg-muted p-2 text-left font-bold">Общий итог</th>
+                  <th className="border border-border bg-muted p-2 text-left font-bold min-w-[150px] sm:min-w-[200px] sticky left-0 z-10">
+                    <div className="whitespace-normal">Общий итог</div>
+                  </th>
                   {STAGE_ORDER.map((s) => (
                     <td key={s} className={`border border-border ${stageClass(s)} p-2 text-center font-bold`}>
                       {fmt(tableData.grand[s])}
@@ -186,6 +190,8 @@ export function StaleTab({ deals }: StaleTabProps) {
                 </tr>
               </tfoot>
             </table>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
