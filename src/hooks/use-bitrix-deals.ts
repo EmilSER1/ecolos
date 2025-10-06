@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Deal, Task } from "@/types/crm";
 import { normalizeDeals } from "@/lib/normalizers";
-import { calcAutoMeta } from "@/lib/storage";
-import { saveDealFileToCloud, saveTaskFileToCloud } from "@/lib/cloud-storage";
 import { toast } from "@/hooks/use-toast";
 
   // Маппинг стадий Bitrix24 на русские названия
@@ -119,11 +117,6 @@ export function useBitrixDeals() {
       
       setDeals(normalized);
 
-      // Сохраняем в облако
-      const metadata = calcAutoMeta(normalized);
-      const fileName = `bitrix_deals_${new Date().toISOString().split('T')[0]}.json`;
-      await saveDealFileToCloud(fileName, normalized, metadata);
-
       toast({
         title: "Сделки загружены",
         description: `Загружено ${normalized.length} сделок из Bitrix24`,
@@ -226,10 +219,6 @@ export function useBitrixDeals() {
       }));
 
       setTasks(bitrixTasks);
-
-      // Сохраняем в облако
-      const fileName = `bitrix_tasks_${new Date().toISOString().split('T')[0]}.json`;
-      await saveTaskFileToCloud(fileName, bitrixTasks);
 
       toast({
         title: "Задачи загружены",
