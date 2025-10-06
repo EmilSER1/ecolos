@@ -97,21 +97,16 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
       Object.keys(deal).forEach(key => allKeys.add(key));
     });
     
-    const standardColumns = [
-      "ID сделки", "Название", "Ответственный", "Стадия сделки", "Отдел",
-      "Сумма", "Валюта", "Компания", "Контакт", "Комментарии",
-      "Тип", "Вероятность", "Источник",
-      "Дата создания", "Дата изменения", "Дата начала", "Дата закрытия"
-    ];
+    console.log("=== АНАЛИЗ КОЛОНОК ТАБЛИЦЫ ===");
+    console.log("Всего уникальных полей во всех сделках:", allKeys.size);
+    console.log("Все поля:", Array.from(allKeys));
     
-    // Находим все пользовательские поля (UF_CRM_*)
-    const customFields = Array.from(allKeys).filter(
-      key => key.startsWith('UF_CRM_') && !standardColumns.includes(key)
-    );
+    const ufFields = Array.from(allKeys).filter(k => k.startsWith('UF_CRM_'));
+    console.log("Найдено пользовательских полей (UF_CRM_*):", ufFields.length);
+    console.log("Список пользовательских полей:", ufFields);
     
-    console.log("Найдено пользовательских полей:", customFields.length, customFields);
-    
-    return [...standardColumns, ...customFields];
+    // Все ключи - это и есть наши колонки
+    return Array.from(allKeys);
   }, [deals]);
   return (
     <div className="h-[calc(100vh-80px)] flex flex-col">

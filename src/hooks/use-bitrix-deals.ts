@@ -195,59 +195,57 @@ export function useBitrixDeals() {
         }
       }
 
-      console.log("Пример первой сделки (все поля):", allDeals[0]);
+      console.log("Загружено сделок:", allDeals.length);
+      if (allDeals.length > 0) {
+        console.log("=== ПРИМЕР ПЕРВОЙ СДЕЛКИ ИЗ BITRIX24 ===");
+        console.log("Все ключи:", Object.keys(allDeals[0]));
+        console.log("Пользовательские поля (UF_CRM_*):", Object.keys(allDeals[0]).filter(k => k.startsWith('UF_CRM_')));
+        console.log("Полные данные первой сделки:", allDeals[0]);
+      }
       
       // Преобразуем данные Bitrix в формат Deal
       const bitrixDeals = allDeals.map((deal: any) => {
         const stageId = deal.STAGE_ID || "";
         const stageName = stageNameMapping[stageId] || stageId;
         
-        // Базовые поля
-        const dealData: any = {
-          "ID сделки": deal.ID,
-          "Название": deal.TITLE || "—",
-          "Ответственный": userMap.get(deal.ASSIGNED_BY_ID) || "Неизвестно",
-          "Стадия сделки": stageName,
-          "Дата создания": deal.DATE_CREATE || null,
-          "Дата изменения": deal.DATE_MODIFY || null,
-          "Отдел": deal.UF_CRM_1589877847 || "—",
-          "Сумма": deal.OPPORTUNITY || "0",
-          "Валюта": deal.CURRENCY_ID || "RUB",
-          "Компания": deal.COMPANY_TITLE || "—",
-          "Комментарии": deal.COMMENTS || "—",
-          "Контакт": contactMap.get(deal.CONTACT_ID) || "—",
-          "Дата начала": deal.BEGINDATE || null,
-          "Дата закрытия": deal.CLOSEDATE || null,
-          "Тип": deal.TYPE_ID || "—",
-          "Вероятность": deal.PROBABILITY ? `${deal.PROBABILITY}%` : "—",
-          "Источник": deal.SOURCE_ID || "—",
-        };
-
-        // Добавляем ВСЕ пользовательские поля (UF_CRM_*)
+        // Создаем объект со ВСЕМИ полями из Bitrix24
+        const dealData: any = {};
+        
+        // Копируем абсолютно ВСЕ поля из оригинальной сделки
         Object.keys(deal).forEach(key => {
-          if (key.startsWith('UF_CRM_')) {
-            // Обрабатываем значение поля
-            let value = deal[key];
-            
-            // Если это массив, преобразуем в строку
-            if (Array.isArray(value)) {
-              value = value.join(', ');
-            }
-            
-            // Если это объект, преобразуем в JSON-строку
-            if (value && typeof value === 'object') {
-              value = JSON.stringify(value);
-            }
-            
-            dealData[key] = value || "—";
-          }
+          dealData[key] = deal[key];
         });
+        
+        
+        // Специальные маппинги для читаемости
+        dealData["ID сделки"] = deal.ID;
+        dealData["Название"] = deal.TITLE || "—";
+        dealData["Ответственный"] = userMap.get(deal.ASSIGNED_BY_ID) || "Неизвестно";
+        dealData["Стадия сделки"] = stageName;
+        dealData["Дата создания"] = deal.DATE_CREATE || null;
+        dealData["Дата изменения"] = deal.DATE_MODIFY || null;
+        dealData["Отдел"] = deal.UF_CRM_1589877847 || "—";
+        dealData["Сумма"] = deal.OPPORTUNITY || "0";
+        dealData["Валюта"] = deal.CURRENCY_ID || "RUB";
+        dealData["Компания"] = deal.COMPANY_TITLE || "—";
+        dealData["Комментарии"] = deal.COMMENTS || "—";
+        dealData["Контакт"] = contactMap.get(deal.CONTACT_ID) || "—";
+        dealData["Дата начала"] = deal.BEGINDATE || null;
+        dealData["Дата закрытия"] = deal.CLOSEDATE || null;
+        dealData["Тип"] = deal.TYPE_ID || "—";
+        dealData["Вероятность"] = deal.PROBABILITY ? `${deal.PROBABILITY}%` : "—";
+        dealData["Источник"] = deal.SOURCE_ID || "—";
 
         return dealData;
       });
 
-      console.log("Пример обработанной сделки:", bitrixDeals[0]);
-      console.log("Все ключи первой сделки:", Object.keys(bitrixDeals[0]));
+      if (bitrixDeals.length > 0) {
+        console.log("=== ПРИМЕР ОБРАБОТАННОЙ СДЕЛКИ ===");
+        console.log("Все ключи обработанной сделки:", Object.keys(bitrixDeals[0]));
+        console.log("Количество полей:", Object.keys(bitrixDeals[0]).length);
+        console.log("Пользовательские поля в обработанной сделке:", 
+          Object.keys(bitrixDeals[0]).filter(k => k.startsWith('UF_CRM_')));
+      }
 
       // Нормализуем данные
       const { rows: normalized } = normalizeDeals(bitrixDeals);
