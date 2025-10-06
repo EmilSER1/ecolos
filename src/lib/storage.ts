@@ -1,6 +1,7 @@
-import { DealFile, FileMeta, Deal } from "@/types/crm";
+import { DealFile, FileMeta, Deal, TaskFile, Task } from "@/types/crm";
 
 const DEAL_STORE_KEY = "crm_deal_files_v1";
+const TASK_STORE_KEY = "crm_task_files_v1";
 
 export function loadDealFiles(): DealFile[] {
   try {
@@ -105,4 +106,35 @@ export function labelFromMeta(meta: FileMeta): string {
   }
 
   return a.join(" | ") || "неделя не задана";
+}
+
+// Task files storage
+export function loadTaskFiles(): TaskFile[] {
+  try {
+    return JSON.parse(localStorage.getItem(TASK_STORE_KEY) || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+
+export function saveTaskFiles(arr: TaskFile[]): void {
+  localStorage.setItem(TASK_STORE_KEY, JSON.stringify(arr));
+}
+
+export function addTaskFile(name: string, rows: Task[]): void {
+  const files = loadTaskFiles();
+  const id = Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6);
+
+  files.push({
+    id,
+    name,
+    rows,
+    uploaded: new Date().toISOString(),
+  });
+
+  saveTaskFiles(files);
+}
+
+export function taskFileById(id: string): TaskFile | undefined {
+  return loadTaskFiles().find((f) => f.id === id);
 }

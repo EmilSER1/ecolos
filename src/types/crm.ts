@@ -32,6 +32,13 @@ export interface FileMeta {
   woy: number | null; // week of year
 }
 
+export interface TaskFile {
+  id: string;
+  name: string;
+  rows: Task[];
+  uploaded: string;
+}
+
 export interface ImportInfo {
   mapped: Record<string, string>;
   ignored: number;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Deal, Task } from "@/types/crm";
 import { readFileSmart, parseCSVText } from "@/lib/csv-parser";
 import { normalizeDeals, mergeDeals } from "@/lib/normalizers";
-import { addDealFile } from "@/lib/storage";
+import { addDealFile, addTaskFile } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
 
 export function useDeals() {
@@ -82,6 +82,8 @@ export function useDeals() {
 
       const normalized = normTasks(rows);
       setTasks(normalized);
+      
+      addTaskFile(file.name, normalized);
 
       toast({
         title: "Задачи импортированы",
