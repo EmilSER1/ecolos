@@ -4,6 +4,8 @@ import { Deal } from "@/types/crm";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface FieldMetadata {
   [key: string]: {
@@ -27,6 +29,7 @@ interface BitrixDealsTabProps {
 
 export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDealsTabProps) {
   const [selectedStage, setSelectedStage] = useState<string>("all");
+  const [columnSearch, setColumnSearch] = useState<string>("");
   const [selectedColumns, setSelectedColumns] = useState<string[]>([
     "ID сделки",
     "Название", 
@@ -96,7 +99,7 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
     return deals.filter(deal => deal["Стадия сделки"] === selectedStage);
   }, [deals, selectedStage]);
 
-  // Получаем все доступные колонки
+  // Получаем все доступные колонки с сортировкой
   const allAvailableColumns = useMemo(() => {
     if (deals.length === 0) return [];
     
@@ -105,8 +108,30 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
       Object.keys(deal).forEach(key => allKeys.add(key));
     });
     
-    return Array.from(allKeys);
+    // Сортируем: сначала важные поля, потом пользовательские
+    const keysArray = Array.from(allKeys);
+    const importantFields = [
+      "ID сделки", "Название", "Ответственный", "Стадия сделки", 
+      "Сумма", "Компания", "Контакт", "Дата создания", "Дата изменения"
+    ];
+    
+    const important = keysArray.filter(k => importantFields.includes(k));
+    const userFields = keysArray.filter(k => k.startsWith('UF_CRM_')).sort();
+    const other = keysArray.filter(k => !importantFields.includes(k) && !k.startsWith('UF_CRM_')).sort();
+    
+    return [...important, ...userFields, ...other];
   }, [deals]);
+
+  // Фильтруем колонки по поиску
+  const filteredColumns = useMemo(() => {
+    if (!columnSearch) return allAvailableColumns;
+    
+    const searchLower = columnSearch.toLowerCase();
+    return allAvailableColumns.filter(col => {
+      const title = getFieldTitle(col).toLowerCase();
+      return title.includes(searchLower) || col.toLowerCase().includes(searchLower);
+    });
+  }, [allAvailableColumns, columnSearch]);
 
   // Колонки для отображения (только выбранные)
   const displayColumns = useMemo(() => {
@@ -139,33 +164,51 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
           </div>
           
           {deals.length > 0 && (
-            <div className="flex items-start gap-2">
-              <span className="text-sm text-muted-foreground pt-2">Колонки:</span>
-              <div className="flex flex-wrap gap-2">
-                {allAvailableColumns.slice(0, 30).map(col => {
-                  const isSelected = selectedColumns.includes(col);
-                  return (
-                    <Badge
-                      key={col}
-                      variant={isSelected ? "default" : "outline"}
-                      className="cursor-pointer"
-                      onClick={() => {
-                        if (isSelected) {
-                          setSelectedColumns(prev => prev.filter(c => c !== col));
-                        } else {
-                          setSelectedColumns(prev => [...prev, col]);
-                        }
-                      }}
-                    >
-                      {getFieldTitle(col)}
-                    </Badge>
-                  );
-                })}
-                {allAvailableColumns.length > 30 && (
-                  <span className="text-sm text-muted-foreground pt-1">
-                    и еще {allAvailableColumns.length - 30} полей...
-                  </span>
-                )}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Выбрано колонок:</span>
+                <Badge variant="secondary">{selectedColumns.length} из {allAvailableColumns.length}</Badge>
+              </div>
+              
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Поиск по колонкам..."
+                  value={columnSearch}
+                  onChange={(e) => setColumnSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <div className="max-h-[200px] overflow-y-auto border rounded-md p-3 bg-muted/20">
+                <div className="flex flex-wrap gap-2">
+                  {filteredColumns.map(col => {
+                    const isSelected = selectedColumns.includes(col);
+                    const title = getFieldTitle(col);
+                    return (
+                      <Badge
+                        key={col}
+                        variant={isSelected ? "default" : "outline"}
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedColumns(prev => prev.filter(c => c !== col));
+                          } else {
+                            setSelectedColumns(prev => [...prev, col]);
+                          }
+                        }}
+                        title={col}
+                      >
+                        {title}
+                      </Badge>
+                    );
+                  })}
+                  {filteredColumns.length === 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      Ничего не найдено
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}
