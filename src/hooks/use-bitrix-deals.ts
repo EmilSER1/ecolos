@@ -7,6 +7,7 @@ interface FieldMetadata {
   [key: string]: {
     title: string;
     type: string;
+    items?: { [key: string]: string }; // Для списков: ID -> Название
   };
 }
 
@@ -82,14 +83,30 @@ export function useBitrixDeals() {
         if (fieldsData.result) {
           for (const [key, value] of Object.entries(fieldsData.result)) {
             const field = value as any;
-            metadata[key] = {
+            const fieldMeta: any = {
               title: field.formLabel || field.listLabel || field.title || key,
               type: field.type || "string",
             };
+            
+            // Для полей-списков сохраняем возможные значения
+            if (field.items && typeof field.items === 'object') {
+              fieldMeta.items = {};
+              for (const [itemId, itemValue] of Object.entries(field.items)) {
+                if (typeof itemValue === 'string') {
+                  fieldMeta.items[itemId] = itemValue;
+                } else if (typeof itemValue === 'object' && itemValue !== null) {
+                  // Иногда items это объекты с VALUE
+                  fieldMeta.items[itemId] = (itemValue as any).VALUE || itemId;
+                }
+              }
+            }
+            
+            metadata[key] = fieldMeta;
           }
         }
         setFieldMetadata(metadata);
         console.log("Метаданные полей загружены:", Object.keys(metadata).length);
+        console.log("Поля со списками:", Object.entries(metadata).filter(([_, m]) => m.items).length);
       }
 
       // Загружаем стадии с цветами для воронки ПРОДАЖИ

@@ -11,6 +11,7 @@ interface FieldMetadata {
   [key: string]: {
     title: string;
     type: string;
+    items?: { [key: string]: string }; // Для списков: ID -> Название
   };
 }
 
@@ -241,7 +242,18 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
                   return (
                     <TableRow key={idx}>
                       {displayColumns.map(column => {
-                        const value = dealData[column];
+                        let value = dealData[column];
+                        
+                        // Преобразуем значения списков из ID в текст
+                        if (fieldMetadata[column]?.items && value) {
+                          const items = fieldMetadata[column].items!;
+                          // Может быть одно значение или массив
+                          if (Array.isArray(value)) {
+                            value = value.map(v => items[v] || v).join(", ");
+                          } else {
+                            value = items[value] || value;
+                          }
+                        }
                         
                         // Специальная обработка для стадии с цветами из Bitrix
                         if (column === "Стадия сделки") {
