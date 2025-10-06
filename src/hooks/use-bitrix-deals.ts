@@ -248,17 +248,16 @@ export function useBitrixDeals() {
           Object.keys(bitrixDeals[0]).filter(k => k.startsWith('UF_CRM_')));
       }
 
-      // Нормализуем данные
-      const { rows: normalized } = normalizeDeals(bitrixDeals);
-      
-      setDeals(normalized);
+      // НЕ используем normalizeDeals - она удаляет пользовательские поля!
+      // Для Bitrix24 данные уже нормализованы
+      setDeals(bitrixDeals as any);
 
       toast({
         title: "Сделки загружены",
-        description: `Загружено ${normalized.length} сделок из Bitrix24`,
+        description: `Загружено ${bitrixDeals.length} сделок из воронки ПРОДАЖИ`,
       });
 
-      return { success: true, count: normalized.length };
+      return { success: true, count: bitrixDeals.length };
     } catch (error: any) {
       console.error("Error fetching Bitrix deals:", error);
       toast({
