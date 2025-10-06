@@ -27,6 +27,15 @@ interface BitrixDealsTabProps {
 
 export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDealsTabProps) {
   const [selectedStage, setSelectedStage] = useState<string>("all");
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([
+    "ID сделки",
+    "Название", 
+    "Ответственный",
+    "Стадия сделки",
+    "Сумма",
+    "Компания",
+    "Дата создания"
+  ]);
 
   const getStageColorFromBitrix = (stageName: string): string => {
     // Ищем стадию по имени в метаданных
@@ -87,48 +96,77 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
     return deals.filter(deal => deal["Стадия сделки"] === selectedStage);
   }, [deals, selectedStage]);
 
-  // Получаем все колонки, включая пользовательские поля
-  const allColumns = useMemo(() => {
+  // Получаем все доступные колонки
+  const allAvailableColumns = useMemo(() => {
     if (deals.length === 0) return [];
     
-    // Собираем все уникальные ключи из всех сделок
     const allKeys = new Set<string>();
     deals.forEach(deal => {
       Object.keys(deal).forEach(key => allKeys.add(key));
     });
     
-    console.log("=== АНАЛИЗ КОЛОНОК ТАБЛИЦЫ ===");
-    console.log("Всего уникальных полей во всех сделках:", allKeys.size);
-    console.log("Все поля:", Array.from(allKeys));
-    
-    const ufFields = Array.from(allKeys).filter(k => k.startsWith('UF_CRM_'));
-    console.log("Найдено пользовательских полей (UF_CRM_*):", ufFields.length);
-    console.log("Список пользовательских полей:", ufFields);
-    
-    // Все ключи - это и есть наши колонки
     return Array.from(allKeys);
   }, [deals]);
+
+  // Колонки для отображения (только выбранные)
+  const displayColumns = useMemo(() => {
+    return selectedColumns.filter(col => allAvailableColumns.includes(col));
+  }, [selectedColumns, allAvailableColumns]);
   return (
     <div className="h-[calc(100vh-80px)] flex flex-col">
       <Card className="m-4 mb-0 flex-shrink-0">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle>Сделки из Bitrix24 ({filteredDeals.length} из {deals.length})</CardTitle>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-row items-center justify-between">
+            <CardTitle>Сделки из Bitrix24 ({filteredDeals.length} из {deals.length})</CardTitle>
+            {deals.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Стадия:</span>
+                <Select value={selectedStage} onValueChange={setSelectedStage}>
+                  <SelectTrigger className="w-[280px]">
+                    <SelectValue placeholder="Все стадии" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="all">Все стадии</SelectItem>
+                    {uniqueStages.map(stage => (
+                      <SelectItem key={stage} value={stage}>
+                        {stage}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          
           {deals.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Фильтр по стадии:</span>
-              <Select value={selectedStage} onValueChange={setSelectedStage}>
-                <SelectTrigger className="w-[280px]">
-                  <SelectValue placeholder="Все стадии" />
-                </SelectTrigger>
-                <SelectContent className="bg-background z-50">
-                  <SelectItem value="all">Все стадии</SelectItem>
-                  {uniqueStages.map(stage => (
-                    <SelectItem key={stage} value={stage}>
-                      {stage}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-start gap-2">
+              <span className="text-sm text-muted-foreground pt-2">Колонки:</span>
+              <div className="flex flex-wrap gap-2">
+                {allAvailableColumns.slice(0, 30).map(col => {
+                  const isSelected = selectedColumns.includes(col);
+                  return (
+                    <Badge
+                      key={col}
+                      variant={isSelected ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedColumns(prev => prev.filter(c => c !== col));
+                        } else {
+                          setSelectedColumns(prev => [...prev, col]);
+                        }
+                      }}
+                    >
+                      {getFieldTitle(col)}
+                    </Badge>
+                  );
+                })}
+                {allAvailableColumns.length > 30 && (
+                  <span className="text-sm text-muted-foreground pt-1">
+                    и еще {allAvailableColumns.length - 30} полей...
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </CardHeader>
@@ -147,7 +185,7 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
             <Table>
               <TableHeader className="sticky top-0 bg-background z-20 shadow-sm">
                 <TableRow>
-                  {allColumns.map(column => (
+                  {displayColumns.map(column => (
                     <TableHead key={column} className="min-w-[120px] whitespace-nowrap font-semibold">
                       {getFieldTitle(column)}
                     </TableHead>
@@ -159,7 +197,7 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
                   const dealData = deal as any;
                   return (
                     <TableRow key={idx}>
-                      {allColumns.map(column => {
+                      {displayColumns.map(column => {
                         const value = dealData[column];
                         
                         // Специальная обработка для стадии с цветами из Bitrix
