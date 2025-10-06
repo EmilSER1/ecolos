@@ -45,14 +45,9 @@ export function useBitrixDeals() {
       let hasMore = true;
 
       while (hasMore) {
+        // Загружаем все поля, включая пользовательские (UF_CRM_*)
         const response = await fetch(
-          `${webhookUrl}crm.deal.list.json?` +
-          `start=${start}&` +
-          `SELECT[]=ID&SELECT[]=TITLE&SELECT[]=STAGE_ID&SELECT[]=ASSIGNED_BY_ID&` +
-          `SELECT[]=DATE_CREATE&SELECT[]=DATE_MODIFY&SELECT[]=UF_CRM_1589877847&` +
-          `SELECT[]=OPPORTUNITY&SELECT[]=CURRENCY_ID&SELECT[]=COMMENTS&SELECT[]=COMPANY_TITLE&` +
-          `SELECT[]=CONTACT_ID&SELECT[]=BEGINDATE&SELECT[]=CLOSEDATE&SELECT[]=TYPE_ID&` +
-          `SELECT[]=PROBABILITY&SELECT[]=SOURCE_ID`
+          `${webhookUrl}crm.deal.list.json?start=${start}`
         );
         
         if (!response.ok) {
@@ -117,7 +112,8 @@ export function useBitrixDeals() {
         const stageId = deal.STAGE_ID || "";
         const stageName = stageMapping[stageId] || stageId;
         
-        return {
+        // Базовые поля
+        const dealData: any = {
           "ID сделки": deal.ID,
           "Название": deal.TITLE || "—",
           "Ответственный": userMap.get(deal.ASSIGNED_BY_ID) || "Неизвестно",
@@ -136,6 +132,15 @@ export function useBitrixDeals() {
           "Вероятность": deal.PROBABILITY ? `${deal.PROBABILITY}%` : "—",
           "Источник": deal.SOURCE_ID || "—",
         };
+
+        // Добавляем все пользовательские поля (UF_CRM_*)
+        Object.keys(deal).forEach(key => {
+          if (key.startsWith('UF_CRM_') && key !== 'UF_CRM_1589877847') {
+            dealData[key] = deal[key] || "—";
+          }
+        });
+
+        return dealData;
       });
 
       // Нормализуем данные

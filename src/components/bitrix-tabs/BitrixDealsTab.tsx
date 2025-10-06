@@ -4,6 +4,7 @@ import { Deal } from "@/types/crm";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface BitrixDealsTabProps {
   deals: Deal[];
@@ -31,6 +32,25 @@ export function BitrixDealsTab({ deals }: BitrixDealsTabProps) {
     if (selectedStage === "all") return deals;
     return deals.filter(deal => deal["Стадия сделки"] === selectedStage);
   }, [deals, selectedStage]);
+
+  // Получаем все колонки, включая пользовательские поля
+  const allColumns = useMemo(() => {
+    if (deals.length === 0) return [];
+    const standardColumns = [
+      "ID сделки", "Название", "Ответственный", "Стадия сделки", "Отдел",
+      "Сумма", "Валюта", "Компания", "Контакт", "Комментарии",
+      "Тип", "Вероятность", "Источник",
+      "Дата создания", "Дата изменения", "Дата начала", "Дата закрытия"
+    ];
+    
+    // Находим все дополнительные поля из первой сделки
+    const firstDeal = deals[0] as any;
+    const customFields = Object.keys(firstDeal).filter(
+      key => !standardColumns.includes(key) && key.startsWith('UF_CRM_')
+    );
+    
+    return [...standardColumns, ...customFields];
+  }, [deals]);
   return (
     <div className="space-y-4">
       <Card className="w-full">
@@ -62,66 +82,78 @@ export function BitrixDealsTab({ deals }: BitrixDealsTabProps) {
               Перейдите во вкладку "Настройки" и нажмите "Загрузить сделки".
             </p>
           ) : (
-            <div className="w-full overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[80px]">ID</TableHead>
-                    <TableHead className="min-w-[200px]">Название</TableHead>
-                    <TableHead className="min-w-[150px]">Ответственный</TableHead>
-                    <TableHead className="min-w-[180px]">Стадия</TableHead>
-                    <TableHead className="min-w-[120px]">Отдел</TableHead>
-                    <TableHead className="min-w-[120px] text-right">Сумма</TableHead>
-                    <TableHead className="min-w-[80px]">Валюта</TableHead>
-                    <TableHead className="min-w-[150px]">Компания</TableHead>
-                    <TableHead className="min-w-[150px]">Контакт</TableHead>
-                    <TableHead className="min-w-[200px]">Комментарии</TableHead>
-                    <TableHead className="min-w-[100px]">Тип</TableHead>
-                    <TableHead className="min-w-[100px]">Вероятность</TableHead>
-                    <TableHead className="min-w-[100px]">Источник</TableHead>
-                    <TableHead className="min-w-[120px]">Дата создания</TableHead>
-                    <TableHead className="min-w-[120px]">Дата изменения</TableHead>
-                    <TableHead className="min-w-[120px]">Дата начала</TableHead>
-                    <TableHead className="min-w-[120px]">Дата закрытия</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDeals.map((deal, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell className="font-mono text-sm">{deal["ID сделки"]}</TableCell>
-                      <TableCell className="max-w-[200px] break-words whitespace-normal">{deal.Название}</TableCell>
-                      <TableCell className="break-words whitespace-normal">{deal.Ответственный}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={getStageColor(deal["Стадия сделки"])}>
-                          {deal["Стадия сделки"]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="break-words whitespace-normal">{deal.Отдел}</TableCell>
-                      <TableCell className="text-right">{Number(deal.Сумма).toLocaleString("ru-RU")}</TableCell>
-                      <TableCell>{deal.Валюта}</TableCell>
-                      <TableCell className="break-words whitespace-normal">{deal.Компания}</TableCell>
-                      <TableCell className="break-words whitespace-normal">{deal.Контакт}</TableCell>
-                      <TableCell className="max-w-[200px] break-words whitespace-normal">{deal.Комментарии}</TableCell>
-                      <TableCell className="break-words whitespace-normal">{deal.Тип}</TableCell>
-                      <TableCell>{deal.Вероятность}</TableCell>
-                      <TableCell className="break-words whitespace-normal">{deal.Источник}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {deal["Дата создания"] ? new Date(deal["Дата создания"]).toLocaleDateString("ru-RU") : "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {deal["Дата изменения"] ? new Date(deal["Дата изменения"]).toLocaleDateString("ru-RU") : "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {deal["Дата начала"] ? new Date(deal["Дата начала"]).toLocaleDateString("ru-RU") : "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {deal["Дата закрытия"] ? new Date(deal["Дата закрытия"]).toLocaleDateString("ru-RU") : "—"}
-                      </TableCell>
+            <ScrollArea className="w-full">
+              <div className="w-full overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {allColumns.map(column => (
+                        <TableHead key={column} className="min-w-[120px] break-words whitespace-normal">
+                          {column}
+                        </TableHead>
+                      ))}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDeals.map((deal, idx) => {
+                      const dealData = deal as any;
+                      return (
+                        <TableRow key={idx}>
+                          {allColumns.map(column => {
+                            const value = dealData[column];
+                            
+                            // Специальная обработка для стадии
+                            if (column === "Стадия сделки") {
+                              return (
+                                <TableCell key={column}>
+                                  <Badge variant="outline" className={getStageColor(value)}>
+                                    {value}
+                                  </Badge>
+                                </TableCell>
+                              );
+                            }
+                            
+                            // Специальная обработка для суммы
+                            if (column === "Сумма") {
+                              return (
+                                <TableCell key={column} className="text-right">
+                                  {Number(value || 0).toLocaleString("ru-RU")}
+                                </TableCell>
+                              );
+                            }
+                            
+                            // Специальная обработка для дат
+                            if (column.includes("Дата")) {
+                              return (
+                                <TableCell key={column} className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {value ? new Date(value).toLocaleDateString("ru-RU") : "—"}
+                                </TableCell>
+                              );
+                            }
+                            
+                            // ID с моноширинным шрифтом
+                            if (column === "ID сделки") {
+                              return (
+                                <TableCell key={column} className="font-mono text-sm">
+                                  {value || "—"}
+                                </TableCell>
+                              );
+                            }
+                            
+                            // Обычные поля с переносом слов
+                            return (
+                              <TableCell key={column} className="break-words whitespace-normal">
+                                {value || "—"}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
           )}
         </CardContent>
       </Card>
