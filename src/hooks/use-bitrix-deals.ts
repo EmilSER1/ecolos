@@ -3,6 +3,13 @@ import { Deal, Task } from "@/types/crm";
 import { normalizeDeals } from "@/lib/normalizers";
 import { toast } from "@/hooks/use-toast";
 
+interface FieldMetadata {
+  [key: string]: {
+    title: string;
+    type: string;
+  };
+}
+
   // Маппинг стадий Bitrix24 на русские названия
   const stageMapping: Record<string, string> = {
     "NEW": "Новая",
@@ -34,10 +41,45 @@ export function useBitrixDeals() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fieldMetadata, setFieldMetadata] = useState<FieldMetadata>({});
 
   const fetchDealsFromBitrix = async (webhookUrl: string) => {
     setLoading(true);
     try {
+      // Загружаем метаданные полей
+      const fieldsResponse = await fetch(`${webhookUrl}crm.deal.fields.json`);
+      if (fieldsResponse.ok) {
+        const fieldsData = await fieldsResponse.json();
+        const metadata: FieldMetadata = {};
+        
+        if (fieldsData.result) {
+          for (const [key, value] of Object.entries(fieldsData.result)) {
+            const field = value as any;
+            metadata[key] = {
+              title: field.formLabel || field.listLabel || field.title || key,
+              type: field.type || "string",
+            };
+          }
+        }
+        
+        setFieldMetadata(metadata);
+        console.log("Метаданные полей загружены:", Object.keys(metadata).length, "полей");
+      }
+
+      // Загружаем названия стадий
+      const stagesResponse = await fetch(`${webhookUrl}crm.dealcategory.stage.list.json`);
+      const updatedStageMapping: Record<string, string> = { ...stageMapping };
+      
+      if (stagesResponse.ok) {
+        const stagesData = await stagesResponse.json();
+        if (stagesData.result) {
+          stagesData.result.forEach((stage: any) => {
+            updatedStageMapping[stage.STATUS_ID] = stage.NAME;
+          });
+        }
+        console.log("Названия стадий загружены:", Object.keys(updatedStageMapping).length, "стадий");
+      }
+
       // Загружаем все сделки с пагинацией
       let allDeals: any[] = [];
       let start = 0;
@@ -110,7 +152,7 @@ export function useBitrixDeals() {
       // Преобразуем данные Bitrix в формат Deal с русскими названиями стадий
       const bitrixDeals = allDeals.map((deal: any) => {
         const stageId = deal.STAGE_ID || "";
-        const stageName = stageMapping[stageId] || stageId;
+        const stageName = updatedStageMapping[stageId] || stageId;
         
         // Базовые поля
         const dealData: any = {
@@ -276,5 +318,6 @@ export function useBitrixDeals() {
     loading,
     fetchDealsFromBitrix,
     fetchTasksFromBitrix,
+    fieldMetadata,
   };
 }

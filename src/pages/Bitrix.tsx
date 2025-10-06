@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 
 const Bitrix = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { deals, tasks, loading, fetchDealsFromBitrix, fetchTasksFromBitrix } = useBitrixDeals();
+  const { deals, tasks, loading, fetchDealsFromBitrix, fetchTasksFromBitrix, fieldMetadata } = useBitrixDeals();
 
   if (loading) {
     return (
@@ -23,9 +23,9 @@ const Bitrix = () => {
     <div className="min-h-screen bg-background">
       <BitrixHeader activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main className="container mx-auto p-4">
+      <main className={activeTab === "deals" ? "" : "container mx-auto p-4"}>
         {activeTab === "dashboard" && <BitrixDashboardTab deals={deals} tasks={tasks} />}
-        {activeTab === "deals" && <BitrixDealsTab deals={deals} />}
+        {activeTab === "deals" && <BitrixDealsTab deals={deals} fieldMetadata={fieldMetadata} />}
         {activeTab === "tasks" && <BitrixTasksTab tasks={tasks} />}
         {activeTab === "settings" && (
           <BitrixSettingsTab 
