@@ -100,13 +100,18 @@ export function MismatchTab({ deals }: MismatchTabProps) {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <div className="inline-block min-w-full align-middle">
-              <div className="overflow-hidden">
-                <table id="mismatch-table" className="min-w-full border-collapse text-xs sm:text-sm">
+          <div className="w-full">
+            <table id="mismatch-table" className="w-full border-collapse text-xs sm:text-sm table-fixed">
+              <colgroup>
+                <col className="w-[200px] sm:w-[250px]" />
+                {STAGE_ORDER.map((s) => (
+                  <col key={s} />
+                ))}
+                <col className="w-[100px]" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th rowSpan={2} className="border border-border bg-muted p-2 text-left font-semibold align-bottom min-w-[150px] sm:min-w-[200px] sticky left-0 z-10">
+                  <th rowSpan={2} className="border border-border bg-muted p-2 text-left font-semibold align-bottom">
                     Ответственный
                   </th>
                   <th
@@ -133,8 +138,8 @@ export function MismatchTab({ deals }: MismatchTabProps) {
                 </tr>
                 <tr>
                   {STAGE_ORDER.map((s, i) => (
-                    <th key={s} className={`border border-border ${stageClass(s)} p-2 text-center font-medium text-xs min-w-[100px] sm:min-w-[120px]`}>
-                      <div className="whitespace-normal">{i + 1}. {s}</div>
+                    <th key={s} className={`border border-border ${stageClass(s)} p-1 text-center font-medium text-[10px] sm:text-xs`}>
+                      <div className="whitespace-normal leading-tight">{i + 1}</div>
                     </th>
                   ))}
                 </tr>
@@ -143,16 +148,16 @@ export function MismatchTab({ deals }: MismatchTabProps) {
                 {tableData.rows.map((row, idx) => (
                   <tr key={idx}>
                     <th
-                      className={`border border-border p-2 text-left min-w-[150px] sm:min-w-[200px] sticky left-0 z-10 ${
+                      className={`border border-border p-2 text-left text-xs sm:text-sm ${
                         row.type === "person" ? row.personClass : "bg-muted font-bold"
                       }`}
                     >
-                      <div className="whitespace-normal">{row.name}</div>
+                      <div className="truncate" title={row.name}>{row.name}</div>
                     </th>
                     {row.cells.map((cell: any, ci: number) => (
                       <td
                         key={ci}
-                        className={`border border-border p-2 text-center ${stageClass(cell.stage)}`}
+                        className={`border border-border p-1 text-center text-xs ${stageClass(cell.stage)}`}
                       >
                         {cell.value > 0 && (
                           <span className={cell.bad ? "font-bold text-destructive" : "font-semibold"}>
@@ -169,13 +174,13 @@ export function MismatchTab({ deals }: MismatchTabProps) {
               </tbody>
               <tfoot>
                 <tr>
-                  <th className="border border-border bg-muted p-2 text-left font-bold min-w-[150px] sm:min-w-[200px] sticky left-0 z-10">
-                    <div className="whitespace-normal">Общий итог</div>
+                  <th className="border border-border bg-muted p-2 text-left font-bold text-xs sm:text-sm">
+                    <div className="truncate">Общий итог</div>
                   </th>
                   {tableData.grandCells.map((cell, idx) => (
                     <td
                       key={idx}
-                      className={`border border-border p-2 text-center font-bold ${stageClass(
+                      className={`border border-border p-1 text-center font-bold text-xs ${stageClass(
                         cell.stage
                       )}`}
                     >
@@ -188,8 +193,6 @@ export function MismatchTab({ deals }: MismatchTabProps) {
                 </tr>
               </tfoot>
             </table>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
