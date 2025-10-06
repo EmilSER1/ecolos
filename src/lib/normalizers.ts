@@ -162,10 +162,16 @@ export function normalizeDeals(rows: Record<string, string>[]): NormalizedDealsR
       "Дата создания": toISO(r[cC ?? ""] || r["Дата создания"] || null),
       "Дата изменения": toISO(r[cU ?? ""] || r["Дата изменения"] || null),
       Отдел: DEPT_BY_PERSON[resp] || "—",
-      "Сумма": r["Сумма"] || "0",
-      "Валюта": r["Валюта"] || "RUB",
-      "Компания": r["Компания"] || "—",
-      "Комментарии": r["Комментарии"] || "—",
+      "Сумма": r["Сумма"] || r["Opportunity"] || r["OPPORTUNITY"] || "0",
+      "Валюта": r["Валюта"] || r["Currency"] || r["CURRENCY_ID"] || "RUB",
+      "Компания": r["Компания"] || r["Company"] || r["COMPANY_TITLE"] || "—",
+      "Комментарии": r["Комментарии"] || r["Comments"] || r["COMMENTS"] || "—",
+      "Контакт": r["Контакт"] || r["Contact"] || r["CONTACT_ID"] || "—",
+      "Дата начала": toISO(r["Дата начала"] || r["BeginDate"] || r["BEGINDATE"] || null),
+      "Дата закрытия": toISO(r["Дата закрытия"] || r["CloseDate"] || r["CLOSEDATE"] || null),
+      "Тип": r["Тип"] || r["Type"] || r["TYPE_ID"] || "—",
+      "Вероятность": r["Вероятность"] || r["Probability"] || r["PROBABILITY"] || "—",
+      "Источник": r["Источник"] || r["Source"] || r["SOURCE_ID"] || "—",
     };
   });
 

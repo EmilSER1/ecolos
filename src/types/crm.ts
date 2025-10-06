@@ -10,6 +10,12 @@ export interface Deal {
   "Валюта": string;
   "Компания": string;
   "Комментарии": string;
+  "Контакт": string;
+  "Дата начала": string | null;
+  "Дата закрытия": string | null;
+  "Тип": string;
+  "Вероятность": string;
+  "Источник": string;
 }
 
 export interface Task {

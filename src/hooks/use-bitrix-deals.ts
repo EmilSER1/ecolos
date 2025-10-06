@@ -50,7 +50,9 @@ export function useBitrixDeals() {
           `start=${start}&` +
           `SELECT[]=ID&SELECT[]=TITLE&SELECT[]=STAGE_ID&SELECT[]=ASSIGNED_BY_ID&` +
           `SELECT[]=DATE_CREATE&SELECT[]=DATE_MODIFY&SELECT[]=UF_CRM_1589877847&` +
-          `SELECT[]=OPPORTUNITY&SELECT[]=CURRENCY_ID&SELECT[]=COMMENTS&SELECT[]=COMPANY_TITLE`
+          `SELECT[]=OPPORTUNITY&SELECT[]=CURRENCY_ID&SELECT[]=COMMENTS&SELECT[]=COMPANY_TITLE&` +
+          `SELECT[]=CONTACT_ID&SELECT[]=BEGINDATE&SELECT[]=CLOSEDATE&SELECT[]=TYPE_ID&` +
+          `SELECT[]=PROBABILITY&SELECT[]=SOURCE_ID`
         );
         
         if (!response.ok) {
@@ -92,6 +94,24 @@ export function useBitrixDeals() {
         }
       }
 
+      // Получаем информацию о контактах
+      const contactIds = [...new Set(allDeals.map((deal: any) => deal.CONTACT_ID))].filter(Boolean);
+      const contactMap = new Map();
+      
+      if (contactIds.length > 0) {
+        for (let i = 0; i < contactIds.length; i += 50) {
+          const chunk = contactIds.slice(i, i + 50);
+          const contactsResponse = await fetch(`${webhookUrl}crm.contact.list.json?${chunk.map(id => `ID[]=${id}`).join('&')}`);
+          const contactsData = await contactsResponse.json();
+          
+          if (contactsData.result) {
+            contactsData.result.forEach((contact: any) => {
+              contactMap.set(contact.ID, `${contact.NAME || ''} ${contact.LAST_NAME || ''}`.trim());
+            });
+          }
+        }
+      }
+
       // Преобразуем данные Bitrix в формат Deal с русскими названиями стадий
       const bitrixDeals = allDeals.map((deal: any) => {
         const stageId = deal.STAGE_ID || "";
@@ -109,6 +129,12 @@ export function useBitrixDeals() {
           "Валюта": deal.CURRENCY_ID || "RUB",
           "Компания": deal.COMPANY_TITLE || "—",
           "Комментарии": deal.COMMENTS || "—",
+          "Контакт": contactMap.get(deal.CONTACT_ID) || "—",
+          "Дата начала": deal.BEGINDATE || null,
+          "Дата закрытия": deal.CLOSEDATE || null,
+          "Тип": deal.TYPE_ID || "—",
+          "Вероятность": deal.PROBABILITY ? `${deal.PROBABILITY}%` : "—",
+          "Источник": deal.SOURCE_ID || "—",
         };
       });
 
