@@ -81,6 +81,9 @@ export function useBitrixDeals() {
       if (fieldsResponse.ok) {
         const fieldsData = await fieldsResponse.json();
         if (fieldsData.result) {
+          console.log("=== ОТЛАДКА МЕТАДАННЫХ ПОЛЕЙ ===");
+          let fieldsWithItems = 0;
+          
           for (const [key, value] of Object.entries(fieldsData.result)) {
             const field = value as any;
             const fieldMeta: any = {
@@ -88,25 +91,48 @@ export function useBitrixDeals() {
               type: field.type || "string",
             };
             
-            // Для полей-списков сохраняем возможные значения
-            if (field.items && typeof field.items === 'object') {
+            // Обрабатываем разные типы полей со списками
+            // Типы: list, enumeration, crm_status и другие
+            if (field.items && typeof field.items === 'object' && Object.keys(field.items).length > 0) {
               fieldMeta.items = {};
               for (const [itemId, itemValue] of Object.entries(field.items)) {
                 if (typeof itemValue === 'string') {
                   fieldMeta.items[itemId] = itemValue;
                 } else if (typeof itemValue === 'object' && itemValue !== null) {
-                  // Иногда items это объекты с VALUE
-                  fieldMeta.items[itemId] = (itemValue as any).VALUE || itemId;
+                  // items могут быть объектами с разными структурами
+                  const val = itemValue as any;
+                  fieldMeta.items[itemId] = val.VALUE || val.NAME || val.TITLE || itemId;
                 }
+              }
+              fieldsWithItems++;
+              
+              // Логируем первые 3 поля со списками для отладки
+              if (fieldsWithItems <= 3) {
+                console.log(`Поле "${key}" (${fieldMeta.title}):`, {
+                  type: field.type,
+                  itemsCount: Object.keys(fieldMeta.items).length,
+                  firstItems: Object.entries(fieldMeta.items).slice(0, 3)
+                });
               }
             }
             
             metadata[key] = fieldMeta;
           }
+          
+          console.log("Всего полей:", Object.keys(metadata).length);
+          console.log("Полей со списками:", fieldsWithItems);
+          
+          // Выводим примеры полей со списками
+          const fieldsWithItemsArray = Object.entries(metadata)
+            .filter(([_, m]) => m.items && Object.keys(m.items).length > 0)
+            .slice(0, 5);
+          console.log("Примеры полей со списками:", fieldsWithItemsArray.map(([k, m]) => ({
+            key: k,
+            title: m.title,
+            itemsCount: Object.keys(m.items || {}).length
+          })));
         }
         setFieldMetadata(metadata);
-        console.log("Метаданные полей загружены:", Object.keys(metadata).length);
-        console.log("Поля со списками:", Object.entries(metadata).filter(([_, m]) => m.items).length);
       }
 
       // Загружаем стадии с цветами для воронки ПРОДАЖИ
