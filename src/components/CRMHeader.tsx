@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload } from "lucide-react";
+import { Upload, Link2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface CRMHeaderProps {
   activeTab: string;
@@ -29,6 +30,7 @@ export function CRMHeader({
   dealMode,
   onDealModeChange,
 }: CRMHeaderProps) {
+  const navigate = useNavigate();
   const dealInputRef = useRef<HTMLInputElement>(null);
   const taskInputRef = useRef<HTMLInputElement>(null);
 
@@ -69,6 +71,16 @@ export function CRMHeader({
       </nav>
 
       <div className="flex flex-wrap items-center gap-3 border-l border-border pl-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/bitrix")}
+          className="border-orange-500/50 hover:bg-orange-500/10"
+        >
+          <Link2 className="mr-2 h-4 w-4" />
+          Bitrix24
+        </Button>
+
         <div className="flex items-center gap-2">
           <input
             ref={dealInputRef}
