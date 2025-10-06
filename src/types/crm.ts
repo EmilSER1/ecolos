@@ -1,10 +1,15 @@
 export interface Deal {
   "ID сделки": string | null;
+  "Название": string;
   "Ответственный": string;
   "Стадия сделки": string;
   "Дата создания": string | null;
   "Дата изменения": string | null;
   "Отдел": string;
+  "Сумма": string;
+  "Валюта": string;
+  "Компания": string;
+  "Комментарии": string;
 }
 
 export interface Task {

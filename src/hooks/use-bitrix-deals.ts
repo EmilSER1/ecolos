@@ -101,11 +101,16 @@ export function useBitrixDeals() {
         
         return {
           "ID сделки": deal.ID,
+          "Название": deal.TITLE || "—",
           "Ответственный": userMap.get(deal.ASSIGNED_BY_ID) || "Неизвестно",
           "Стадия сделки": stageName,
           "Дата создания": deal.DATE_CREATE || null,
           "Дата изменения": deal.DATE_MODIFY || null,
           "Отдел": deal.UF_CRM_1589877847 || "—",
+          "Сумма": deal.OPPORTUNITY || "0",
+          "Валюта": deal.CURRENCY_ID || "RUB",
+          "Компания": deal.COMPANY_TITLE || "—",
+          "Комментарии": deal.COMMENTS || "—",
         };
       });
 

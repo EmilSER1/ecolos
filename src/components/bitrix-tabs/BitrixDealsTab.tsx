@@ -33,9 +33,14 @@ export function BitrixDealsTab({ deals }: BitrixDealsTabProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
+                    <TableHead>Название</TableHead>
                     <TableHead>Ответственный</TableHead>
                     <TableHead>Стадия</TableHead>
                     <TableHead>Отдел</TableHead>
+                    <TableHead>Сумма</TableHead>
+                    <TableHead>Валюта</TableHead>
+                    <TableHead>Компания</TableHead>
+                    <TableHead>Комментарии</TableHead>
                     <TableHead>Дата создания</TableHead>
                     <TableHead>Дата изменения</TableHead>
                   </TableRow>
@@ -44,6 +49,7 @@ export function BitrixDealsTab({ deals }: BitrixDealsTabProps) {
                   {deals.map((deal, idx) => (
                     <TableRow key={idx}>
                       <TableCell className="font-mono text-sm">{deal["ID сделки"]}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{deal.Название}</TableCell>
                       <TableCell>{deal.Ответственный}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={getStageColor(deal["Стадия сделки"])}>
@@ -51,10 +57,14 @@ export function BitrixDealsTab({ deals }: BitrixDealsTabProps) {
                         </Badge>
                       </TableCell>
                       <TableCell>{deal.Отдел}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-right">{Number(deal.Сумма).toLocaleString("ru-RU")}</TableCell>
+                      <TableCell>{deal.Валюта}</TableCell>
+                      <TableCell className="max-w-[150px] truncate">{deal.Компания}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{deal.Комментарии}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {deal["Дата создания"] ? new Date(deal["Дата создания"]).toLocaleDateString("ru-RU") : "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {deal["Дата изменения"] ? new Date(deal["Дата изменения"]).toLocaleDateString("ru-RU") : "—"}
                       </TableCell>
                     </TableRow>
