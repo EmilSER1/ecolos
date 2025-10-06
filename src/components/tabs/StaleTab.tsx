@@ -154,7 +154,7 @@ export function StaleTab({ deals }: StaleTabProps) {
                 <tr>
                   {STAGE_ORDER.map((s, i) => (
                     <th key={s} className={`border border-border ${stageClass(s)} p-1 text-center font-medium text-[10px] sm:text-xs`}>
-                      <div className="whitespace-normal leading-tight">{i + 1}</div>
+                      <div className="whitespace-normal leading-tight">{i + 1}. {s}</div>
                     </th>
                   ))}
                 </tr>
