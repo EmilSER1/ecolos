@@ -1,10 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { DealComparison as DealComparisonType } from "@/hooks/use-file-comparison";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 interface DealComparisonProps {
   comparison: DealComparisonType;
@@ -13,74 +9,53 @@ interface DealComparisonProps {
 }
 
 export function DealComparison({ comparison, file1Name, file2Name }: DealComparisonProps) {
-  const getChangeIcon = (change: number) => {
-    if (change > 0) return <ArrowUp className="w-4 h-4 text-green-600" />;
-    if (change < 0) return <ArrowDown className="w-4 h-4 text-red-600" />;
-    return <Minus className="w-4 h-4 text-muted-foreground" />;
+  const getChangeColor = (change: number) => {
+    if (change > 0) return "text-green-500";
+    if (change < 0) return "text-red-500";
+    return "text-muted-foreground";
   };
 
-  const getChangeBadge = (change: number) => {
-    if (change > 0) return <Badge variant="default" className="bg-green-600">{change > 0 ? `+${change}` : change}</Badge>;
-    if (change < 0) return <Badge variant="destructive">{change}</Badge>;
-    return <Badge variant="secondary">{change}</Badge>;
+  const formatChange = (change: number) => {
+    if (change > 0) return `+${change}`;
+    return change.toString();
   };
 
-  const stageChartData = Object.entries(comparison.stageChanges).map(([stage, change]) => ({
-    stage,
-    change,
-  }));
+  // Подсчитываем значения для файлов A и B
+  const getFileCounts = () => {
+    const file1Stages: Record<string, number> = {};
+    const file2Stages: Record<string, number> = {};
+    
+    Object.entries(comparison.stageChanges).forEach(([stage, change]) => {
+      const file2Count = Math.abs(change) + (change < 0 ? 0 : change);
+      const file1Count = file2Count - change;
+      file1Stages[stage] = file1Count;
+      file2Stages[stage] = file2Count;
+    });
+    
+    return { file1Stages, file2Stages };
+  };
+
+  const { file1Stages, file2Stages } = getFileCounts();
 
   return (
     <div className="space-y-6">
-      {/* Общая динамика */}
+      {/* Точное сравнение А/В - Стадии */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            Общая динамика сделок
-            {getChangeIcon(comparison.totalChange)}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">
-            {getChangeBadge(comparison.totalChange)}
+          <CardTitle>Стадии • Файлы</CardTitle>
+          <div className="flex gap-4 text-sm text-muted-foreground mt-2">
+            <span>A: {file1Name}</span>
+            <span>B: {file2Name}</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Разница между {file2Name} и {file1Name}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Изменения по стадиям */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Изменения по стадиям</CardTitle>
         </CardHeader>
         <CardContent>
-          <ChartContainer
-            config={{
-              change: {
-                label: "Изменение",
-                color: "hsl(var(--chart-1))",
-              },
-            }}
-            className="h-[300px]"
-          >
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stageChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="stage" />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="change" fill="var(--color-change)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-
-          <Table className="mt-4">
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Стадия</TableHead>
-                <TableHead className="text-right">Изменение</TableHead>
+                <TableHead className="text-right">A</TableHead>
+                <TableHead className="text-right">B</TableHead>
+                <TableHead className="text-right">Δ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -88,12 +63,11 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
                 .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
                 .map(([stage, change]) => (
                   <TableRow key={stage}>
-                    <TableCell>{stage}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {getChangeIcon(change)}
-                        {getChangeBadge(change)}
-                      </div>
+                    <TableCell className="font-medium">{stage}</TableCell>
+                    <TableCell className="text-right">{file1Stages[stage] || 0}</TableCell>
+                    <TableCell className="text-right">{file2Stages[stage] || 0}</TableCell>
+                    <TableCell className={`text-right font-medium ${getChangeColor(change)}`}>
+                      {formatChange(change)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -102,66 +76,76 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
         </CardContent>
       </Card>
 
-      {/* Изменения по ответственным */}
+      {/* Отделы • Файлы */}
       <Card>
         <CardHeader>
-          <CardTitle>Изменения по ответственным</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ответственный</TableHead>
-                <TableHead className="text-right">Изменение</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Object.entries(comparison.assigneeChanges)
-                .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
-                .slice(0, 10)
-                .map(([assignee, change]) => (
-                  <TableRow key={assignee}>
-                    <TableCell>{assignee}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {getChangeIcon(change)}
-                        {getChangeBadge(change)}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Изменения по отделам */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Изменения по отделам</CardTitle>
+          <CardTitle>Отделы • Файлы</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Отдел</TableHead>
-                <TableHead className="text-right">Изменение</TableHead>
+                <TableHead className="text-right">A</TableHead>
+                <TableHead className="text-right">B</TableHead>
+                <TableHead className="text-right">Δ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {Object.entries(comparison.departmentChanges)
                 .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
-                .map(([dept, change]) => (
-                  <TableRow key={dept}>
-                    <TableCell>{dept}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {getChangeIcon(change)}
-                        {getChangeBadge(change)}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                .map(([dept, change]) => {
+                  const file2Count = Math.abs(change) + (change < 0 ? 0 : change);
+                  const file1Count = file2Count - change;
+                  return (
+                    <TableRow key={dept}>
+                      <TableCell className="font-medium">{dept}</TableCell>
+                      <TableCell className="text-right">{file1Count}</TableCell>
+                      <TableCell className="text-right">{file2Count}</TableCell>
+                      <TableCell className={`text-right font-medium ${getChangeColor(change)}`}>
+                        {formatChange(change)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Ответственные */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Ответственные</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ответственный</TableHead>
+                <TableHead className="text-right">A</TableHead>
+                <TableHead className="text-right">B</TableHead>
+                <TableHead className="text-right">Δ</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Object.entries(comparison.assigneeChanges)
+                .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
+                .slice(0, 20)
+                .map(([assignee, change]) => {
+                  const file2Count = Math.abs(change) + (change < 0 ? 0 : change);
+                  const file1Count = file2Count - change;
+                  return (
+                    <TableRow key={assignee}>
+                      <TableCell className="font-medium">{assignee}</TableCell>
+                      <TableCell className="text-right">{file1Count}</TableCell>
+                      <TableCell className="text-right">{file2Count}</TableCell>
+                      <TableCell className={`text-right font-medium ${getChangeColor(change)}`}>
+                        {formatChange(change)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
             </TableBody>
           </Table>
         </CardContent>
@@ -171,17 +155,18 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ArrowUp className="w-5 h-5 text-green-600" />
+            <CardTitle className="text-green-500">
               Новые сделки ({comparison.newDeals.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {comparison.newDeals.slice(0, 50).map((deal, idx) => (
-                <div key={idx} className="text-sm border-b pb-2">
+            <div className="space-y-1 max-h-[400px] overflow-y-auto">
+              {comparison.newDeals.slice(0, 100).map((deal, idx) => (
+                <div key={idx} className="text-sm border-b border-border/50 py-2">
                   <div className="font-medium">{deal["ID сделки"]}</div>
-                  <div className="text-muted-foreground">{deal["Ответственный"]} • {deal["Стадия сделки"]}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {deal["Стадия сделки"]} • {deal["Ответственный"]} • {deal["Отдел"]}
+                  </div>
                 </div>
               ))}
             </div>
@@ -190,17 +175,18 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ArrowDown className="w-5 h-5 text-red-600" />
+            <CardTitle className="text-red-500">
               Исчезнувшие сделки ({comparison.removedDeals.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {comparison.removedDeals.slice(0, 50).map((deal, idx) => (
-                <div key={idx} className="text-sm border-b pb-2">
+            <div className="space-y-1 max-h-[400px] overflow-y-auto">
+              {comparison.removedDeals.slice(0, 100).map((deal, idx) => (
+                <div key={idx} className="text-sm border-b border-border/50 py-2">
                   <div className="font-medium">{deal["ID сделки"]}</div>
-                  <div className="text-muted-foreground">{deal["Ответственный"]} • {deal["Стадия сделки"]}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {deal["Стадия сделки"]} • {deal["Ответственный"]} • {deal["Отдел"]}
+                  </div>
                 </div>
               ))}
             </div>
