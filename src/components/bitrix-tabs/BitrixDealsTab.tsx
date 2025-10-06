@@ -240,26 +240,10 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
                 {filteredDeals.map((deal, idx) => {
                   const dealData = deal as any;
                   
-                  // Логируем первую сделку для отладки
-                  if (idx === 0) {
-                    console.log("=== ОТЛАДКА ОТОБРАЖЕНИЯ ПЕРВОЙ СДЕЛКИ ===");
-                    displayColumns.forEach(col => {
-                      const val = dealData[col];
-                      const hasMeta = !!fieldMetadata[col];
-                      const hasItems = !!fieldMetadata[col]?.items;
-                      const itemsCount = hasItems ? Object.keys(fieldMetadata[col].items!).length : 0;
-                      
-                      if (val && typeof val !== 'object') {
-                        console.log(`"${col}": значение="${val}", hasMeta=${hasMeta}, hasItems=${hasItems}, itemsCount=${itemsCount}`);
-                      }
-                    });
-                  }
-                  
                   return (
                     <TableRow key={idx}>
                       {displayColumns.map(column => {
                         let value = dealData[column];
-                        const originalValue = value;
                         
                         // Преобразуем значения списков из ID в текст
                         if (fieldMetadata[column]?.items && value !== null && value !== undefined && value !== "") {
@@ -267,20 +251,9 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
                           
                           // Может быть одно значение или массив
                           if (Array.isArray(value)) {
-                            const transformed = value.map(v => items[v] || v);
-                            value = transformed.join(", ");
-                            
-                            // Логируем преобразование для первой сделки
-                            if (idx === 0 && JSON.stringify(originalValue) !== JSON.stringify(value)) {
-                              console.log(`[${column}] Преобразовали массив:`, originalValue, "→", value);
-                            }
+                            value = value.map(v => items[v] || v).join(", ");
                           } else if (items[value]) {
-                            // Только если есть точное соответствие
-                            const transformed = items[value];
-                            if (idx === 0 && transformed !== value) {
-                              console.log(`[${column}] Преобразовали значение:`, value, "→", transformed);
-                            }
-                            value = transformed;
+                            value = items[value];
                           }
                         }
                         

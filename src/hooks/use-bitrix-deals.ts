@@ -93,26 +93,46 @@ export function useBitrixDeals() {
             
             // Обрабатываем разные типы полей со списками
             // Типы: list, enumeration, crm_status и другие
-            if (field.items && typeof field.items === 'object' && Object.keys(field.items).length > 0) {
+            if (field.items) {
               fieldMeta.items = {};
-              for (const [itemId, itemValue] of Object.entries(field.items)) {
-                if (typeof itemValue === 'string') {
-                  fieldMeta.items[itemId] = itemValue;
-                } else if (typeof itemValue === 'object' && itemValue !== null) {
-                  // items могут быть объектами с разными структурами
-                  const val = itemValue as any;
-                  fieldMeta.items[itemId] = val.VALUE || val.NAME || val.TITLE || itemId;
+              
+              // items может быть массивом массивов [[ID, Name], ...] или объектом
+              if (Array.isArray(field.items)) {
+                field.items.forEach((item: any) => {
+                  // Если это массив из 2 элементов [ID, Name]
+                  if (Array.isArray(item) && item.length === 2) {
+                    fieldMeta.items[String(item[0])] = String(item[1]);
+                  }
+                  // Или объект с ID и VALUE
+                  else if (typeof item === 'object' && item !== null) {
+                    const val = item as any;
+                    if (val.ID !== undefined && (val.VALUE || val.NAME || val.TITLE)) {
+                      fieldMeta.items[val.ID] = val.VALUE || val.NAME || val.TITLE;
+                    }
+                  }
+                });
+              } else if (typeof field.items === 'object' && Object.keys(field.items).length > 0) {
+                for (const [itemId, itemValue] of Object.entries(field.items)) {
+                  if (typeof itemValue === 'string') {
+                    fieldMeta.items[itemId] = itemValue;
+                  } else if (typeof itemValue === 'object' && itemValue !== null) {
+                    // items могут быть объектами с разными структурами
+                    const val = itemValue as any;
+                    fieldMeta.items[itemId] = val.VALUE || val.NAME || val.TITLE || itemId;
+                  }
                 }
               }
-              fieldsWithItems++;
-              
-              // Логируем первые 3 поля со списками для отладки
-              if (fieldsWithItems <= 3) {
-                console.log(`Поле "${key}" (${fieldMeta.title}):`, {
-                  type: field.type,
-                  itemsCount: Object.keys(fieldMeta.items).length,
-                  firstItems: Object.entries(fieldMeta.items).slice(0, 3)
-                });
+              if (Object.keys(fieldMeta.items).length > 0) {
+                fieldsWithItems++;
+                
+                // Логируем первые 3 поля со списками для отладки
+                if (fieldsWithItems <= 3) {
+                  console.log(`Поле "${key}" (${fieldMeta.title}):`, {
+                    type: field.type,
+                    itemsCount: Object.keys(fieldMeta.items).length,
+                    firstItems: Object.entries(fieldMeta.items).slice(0, 3)
+                  });
+                }
               }
             }
             
