@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { Deal } from "@/types/crm";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DEPARTMENTS, STAGE_ORDER, STAGE_GROUPS, ALLOWED_BY_PERSON, GROUPS } from "@/lib/constants";
-import { fmt } from "@/lib/utils";
+import { DEPARTMENTS, STAGE_ORDER, STAGE_GROUPS, ALLOWED_BY_PERSON } from "@/lib/constants";
+import { fmt, stageClass, personNameClass } from "@/lib/utils";
 import { Download } from "lucide-react";
 import { exportTableToExcel } from "@/lib/export";
 
@@ -12,18 +12,6 @@ interface MismatchTabProps {
 }
 
 export function MismatchTab({ deals }: MismatchTabProps) {
-  const getStageClass = (stage: string) => {
-    if (STAGE_GROUPS["Проектирование"].includes(stage)) return "bg-stage-proj text-stage-proj-fg";
-    if (STAGE_GROUPS["Тендер"].includes(stage)) return "bg-stage-tender text-stage-tender-fg";
-    return "bg-stage-real text-stage-real-fg";
-  };
-
-  const getPersonClass = (person: string) => {
-    if (GROUPS.Tender.includes(person)) return "bg-name-tender text-name-tender-fg font-bold";
-    if (GROUPS.MPO.includes(person)) return "bg-name-mpo text-name-mpo-fg font-bold";
-    return "bg-name-op text-name-op-fg font-bold";
-  };
-
   const tableData = useMemo(() => {
     const depts = Object.keys(DEPARTMENTS);
     const rows: any[] = [];
@@ -57,7 +45,7 @@ export function MismatchTab({ deals }: MismatchTabProps) {
           return { value: v, bad, stage: s };
         });
 
-        rows.push({ type: "person", name: p, cells, total, personClass: getPersonClass(p) });
+        rows.push({ type: "person", name: p, cells, total, personClass: personNameClass(p) });
       });
 
       STAGE_ORDER.forEach((s) => (grand[s] += depTotals[s]));
@@ -113,37 +101,37 @@ export function MismatchTab({ deals }: MismatchTabProps) {
         </CardHeader>
         <CardContent>
           <div className="overflow-auto">
-            <table id="mismatch-table" className="w-full border-collapse text-sm">
+            <table id="mismatch-table" className="w-full border-collapse text-xs">
               <thead>
                 <tr>
-                  <th rowSpan={2} className="border border-border bg-card p-2 text-left">
+                  <th rowSpan={2} className="border border-border bg-muted p-2 text-left font-semibold align-bottom">
                     Ответственный
                   </th>
                   <th
                     colSpan={STAGE_GROUPS["Проектирование"].length}
-                    className="border border-border bg-stage-proj p-2 text-center text-stage-proj-fg"
+                    className="border border-border bg-stage-proj text-stage-proj-fg p-2 text-center font-semibold"
                   >
                     Проектирование
                   </th>
                   <th
                     colSpan={STAGE_GROUPS["Тендер"].length}
-                    className="border border-border bg-stage-tender p-2 text-center text-stage-tender-fg"
+                    className="border border-border bg-stage-tender text-stage-tender-fg p-2 text-center font-semibold"
                   >
                     Тендер
                   </th>
                   <th
                     colSpan={STAGE_GROUPS["Реализация"].length}
-                    className="border border-border bg-stage-real p-2 text-center text-stage-real-fg"
+                    className="border border-border bg-stage-real text-stage-real-fg p-2 text-center font-semibold"
                   >
                     Реализация
                   </th>
-                  <th rowSpan={2} className="border border-border bg-card p-2 text-center">
+                  <th rowSpan={2} className="border border-border bg-muted p-2 text-right font-semibold align-bottom">
                     Итого
                   </th>
                 </tr>
                 <tr>
                   {STAGE_ORDER.map((s, i) => (
-                    <th key={s} className={`border border-border ${getStageClass(s)} p-2 text-center`}>
+                    <th key={s} className={`border border-border ${stageClass(s)} p-2 text-center font-medium text-xs`}>
                       {i + 1}. {s}
                     </th>
                   ))}
@@ -151,7 +139,7 @@ export function MismatchTab({ deals }: MismatchTabProps) {
               </thead>
               <tbody>
                 {tableData.rows.map((row, idx) => (
-                  <tr key={idx} className={row.type === "dept" ? "bg-muted" : idx % 2 === 0 ? "bg-card" : "bg-muted/30"}>
+                  <tr key={idx}>
                     <th
                       className={`border border-border p-2 text-left ${
                         row.type === "person" ? row.personClass : "bg-muted font-bold"
@@ -162,7 +150,7 @@ export function MismatchTab({ deals }: MismatchTabProps) {
                     {row.cells.map((cell: any, ci: number) => (
                       <td
                         key={ci}
-                        className={`border border-border p-2 text-center ${getStageClass(cell.stage)}`}
+                        className={`border border-border p-2 text-center ${stageClass(cell.stage)}`}
                       >
                         {cell.value > 0 && (
                           <span className={cell.bad ? "font-bold text-destructive" : "font-semibold"}>
@@ -171,7 +159,7 @@ export function MismatchTab({ deals }: MismatchTabProps) {
                         )}
                       </td>
                     ))}
-                    <th className="border border-border bg-muted p-2 text-center font-bold">
+                    <th className="border border-border bg-muted p-2 text-right font-bold">
                       {fmt(row.total)}
                     </th>
                   </tr>
@@ -179,18 +167,18 @@ export function MismatchTab({ deals }: MismatchTabProps) {
               </tbody>
               <tfoot>
                 <tr>
-                  <th className="border border-border bg-accent p-2 text-left font-bold">Общий итог</th>
+                  <th className="border border-border bg-muted p-2 text-left font-bold">Общий итог</th>
                   {tableData.grandCells.map((cell, idx) => (
                     <td
                       key={idx}
-                      className={`border border-border p-2 text-center font-bold ${getStageClass(
+                      className={`border border-border p-2 text-center font-bold ${stageClass(
                         cell.stage
                       )}`}
                     >
                       {fmt(cell.value)}
                     </td>
                   ))}
-                  <th className="border border-border bg-accent p-2 text-center font-bold">
+                  <th className="border border-border bg-muted p-2 text-right font-bold">
                     {fmt(tableData.grandTotal)}
                   </th>
                 </tr>

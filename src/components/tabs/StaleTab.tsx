@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download } from "lucide-react";
 import { exportTableToExcel } from "@/lib/export";
+import { STAGE_ORDER, STAGE_GROUPS, DEPARTMENTS, ALLOWED_BY_PERSON } from "@/lib/constants";
+import { fmt, stageClass, personNameClass } from "@/lib/utils";
 
 interface StaleTabProps {
   deals: Deal[];
@@ -26,20 +28,58 @@ export function StaleTab({ deals }: StaleTabProps) {
 
   const staleDeals = useMemo(() => {
     const now = new Date();
-    return deals
-      .filter((r) => {
-        const d = parseDate(r["Дата создания"]);
-        if (!d) return false;
-        const diff = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
-        return diff >= days;
-      })
-      .map((r) => {
-        const d = parseDate(r["Дата создания"]);
-        const daysOpen = d ? Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-        return { ...r, daysOpen };
-      })
-      .sort((a, b) => b.daysOpen - a.daysOpen);
+    return deals.filter((r) => {
+      const d = parseDate(r["Дата изменения"] || r["Дата создания"]);
+      if (!d) return false;
+      const diff = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
+      return diff > days;
+    });
   }, [deals, days]);
+
+  const tableData = useMemo(() => {
+    const depts = Object.keys(DEPARTMENTS);
+    const rows: Array<{ type: "person" | "dept"; name: string; counts: Record<string, number>; total: number; personClass?: string }> = [];
+    const grand: Record<string, number> = Object.fromEntries(STAGE_ORDER.map((s) => [s, 0]));
+    let grandTotal = 0;
+
+    depts.forEach((dept) => {
+      const people = DEPARTMENTS[dept as keyof typeof DEPARTMENTS];
+      const depTotals: Record<string, number> = Object.fromEntries(STAGE_ORDER.map((s) => [s, 0]));
+      let depSum = 0;
+
+      people.forEach((p) => {
+        const personDeals = staleDeals.filter((r) => r["Ответственный"] === p);
+        const counts: Record<string, number> = Object.fromEntries(STAGE_ORDER.map((s) => [s, 0]));
+        personDeals.forEach((r) => {
+          const st = r["Стадия сделки"];
+          if (counts[st] != null) counts[st] += 1;
+        });
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+        depSum += total;
+        STAGE_ORDER.forEach((s) => (depTotals[s] += counts[s]));
+        
+        rows.push({
+          type: "person",
+          name: p,
+          counts,
+          total,
+          personClass: personNameClass(p),
+        });
+      });
+
+      STAGE_ORDER.forEach((s) => (grand[s] += depTotals[s]));
+      grandTotal += depSum;
+      
+      rows.push({
+        type: "dept",
+        name: `Итого ${dept}`,
+        counts: depTotals,
+        total: depSum,
+      });
+    });
+
+    return { rows, grand, grandTotal };
+  }, [staleDeals]);
 
   const handleExport = () => {
     const table = document.getElementById("stale-table");
@@ -82,32 +122,69 @@ export function StaleTab({ deals }: StaleTabProps) {
       </CardHeader>
       <CardContent>
         {staleDeals.length === 0 ? (
-          <p className="text-muted-foreground">Нет сделок открытых более {days} дней</p>
+          <p className="text-muted-foreground">Нет сделок более {days} дней без изменений</p>
         ) : (
           <div className="overflow-auto">
-            <table id="stale-table" className="w-full border-collapse text-sm">
+            <table id="stale-table" className="w-full border-collapse text-xs">
               <thead>
-                <tr className="bg-card">
-                  <th className="border border-border bg-muted p-3 text-left font-semibold">ID сделки</th>
-                  <th className="border border-border bg-muted p-3 text-left font-semibold">Ответственный</th>
-                  <th className="border border-border bg-muted p-3 text-left font-semibold">Стадия сделки</th>
-                  <th className="border border-border bg-muted p-3 text-left font-semibold">Отдел</th>
-                  <th className="border border-border bg-muted p-3 text-left font-semibold">Дата создания</th>
-                  <th className="border border-border bg-muted p-3 text-right font-semibold">Дней открыта</th>
+                <tr>
+                  <th rowSpan={2} className="border border-border bg-muted p-2 text-left font-semibold align-bottom">
+                    Ответственный
+                  </th>
+                  <th colSpan={STAGE_GROUPS.Проектирование.length} className="border border-border bg-stage-proj text-stage-proj-fg p-2 text-center font-semibold">
+                    Проектирование
+                  </th>
+                  <th colSpan={STAGE_GROUPS.Тендер.length} className="border border-border bg-stage-tender text-stage-tender-fg p-2 text-center font-semibold">
+                    Тендер
+                  </th>
+                  <th colSpan={STAGE_GROUPS.Реализация.length} className="border border-border bg-stage-real text-stage-real-fg p-2 text-center font-semibold">
+                    Реализация
+                  </th>
+                  <th rowSpan={2} className="border border-border bg-muted p-2 text-right font-semibold align-bottom">
+                    Итого
+                  </th>
+                </tr>
+                <tr>
+                  {STAGE_ORDER.map((s, i) => (
+                    <th key={s} className={`border border-border ${stageClass(s)} p-2 text-center font-medium text-xs`}>
+                      {i + 1}. {s}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {staleDeals.map((deal, idx) => (
-                  <tr key={idx} className={idx % 2 === 0 ? "bg-card" : "bg-muted/30"}>
-                    <td className="border border-border p-3">{deal["ID сделки"]}</td>
-                    <td className="border border-border p-3">{deal["Ответственный"]}</td>
-                    <td className="border border-border p-3">{deal["Стадия сделки"]}</td>
-                    <td className="border border-border p-3">{deal["Отдел"]}</td>
-                    <td className="border border-border p-3">{deal["Дата создания"]}</td>
-                    <td className="border border-border p-3 text-right font-bold text-destructive">{deal.daysOpen}</td>
+                {tableData.rows.map((row, idx) => (
+                  <tr key={idx}>
+                    <th className={`border border-border p-2 text-left ${row.type === "dept" ? "bg-muted font-bold" : row.personClass}`}>
+                      {row.name}
+                    </th>
+                    {STAGE_ORDER.map((s) => {
+                      const v = row.counts[s] || 0;
+                      return (
+                        <td key={s} className={`border border-border ${stageClass(s)} p-2 text-center`}>
+                          {v > 0 && <span className="font-semibold">{fmt(v)}</span>}
+                        </td>
+                      );
+                    })}
+                    <th className="border border-border bg-muted p-2 text-right font-bold">
+                      {fmt(row.total)}
+                    </th>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr>
+                  <th className="border border-border bg-muted p-2 text-left font-bold">Общий итог</th>
+                  {STAGE_ORDER.map((s) => (
+                    <td key={s} className={`border border-border ${stageClass(s)} p-2 text-center font-bold`}>
+                      {fmt(tableData.grand[s])}
+                    </td>
+                  ))}
+                  <th className="border border-border bg-muted p-2 text-right font-bold">
+                    {fmt(tableData.grandTotal)}
+                  </th>
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}
