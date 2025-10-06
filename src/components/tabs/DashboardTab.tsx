@@ -85,13 +85,36 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
     const canvas = await html2canvas(element, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
     
+    // Используем A4 формат в landscape режиме
     const pdf = new jsPDF({
       orientation: "landscape",
-      unit: "px",
-      format: [canvas.width, canvas.height]
+      unit: "mm",
+      format: "a4"
     });
     
-    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+    // Размеры A4 landscape: 297mm x 210mm
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // Отступы
+    const margin = 10;
+    const availableWidth = pdfWidth - (2 * margin);
+    const availableHeight = pdfHeight - (2 * margin);
+    
+    // Вычисляем масштаб
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const scale = Math.min(availableWidth / imgWidth, availableHeight / imgHeight);
+    
+    // Размеры изображения на странице
+    const scaledWidth = imgWidth * scale;
+    const scaledHeight = imgHeight * scale;
+    
+    // Центрируем изображение
+    const x = (pdfWidth - scaledWidth) / 2;
+    const y = (pdfHeight - scaledHeight) / 2;
+    
+    pdf.addImage(imgData, "PNG", x, y, scaledWidth, scaledHeight);
     pdf.save(`dashboard-${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
