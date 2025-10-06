@@ -244,6 +244,8 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
                     <TableRow key={idx}>
                       {displayColumns.map(column => {
                         let value = dealData[column];
+                        const contactMap = dealData._contactMap;
+                        const companyMap = dealData._companyMap;
                         
                         // Преобразуем значения списков из ID в текст
                         if (fieldMetadata[column]?.items && value !== null && value !== undefined && value !== "") {
@@ -254,6 +256,26 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
                             value = value.map(v => items[v] || v).join(", ");
                           } else if (items[value]) {
                             value = items[value];
+                          }
+                        }
+                        
+                        // Преобразуем ID контактов в имена
+                        if (contactMap && (column.toLowerCase().includes('контакт') || column.toLowerCase().includes('contact'))) {
+                          if (Array.isArray(value)) {
+                            const names = value.map(v => contactMap.get(String(v)) || v).filter(Boolean);
+                            if (names.length > 0) value = names.join(", ");
+                          } else if (value && !isNaN(Number(value))) {
+                            value = contactMap.get(String(value)) || value;
+                          }
+                        }
+                        
+                        // Преобразуем ID компаний в названия
+                        if (companyMap && (column.toLowerCase().includes('компан') || column.toLowerCase().includes('company'))) {
+                          if (Array.isArray(value)) {
+                            const names = value.map(v => companyMap.get(String(v)) || v).filter(Boolean);
+                            if (names.length > 0) value = names.join(", ");
+                          } else if (value && !isNaN(Number(value))) {
+                            value = companyMap.get(String(value)) || value;
                           }
                         }
                         

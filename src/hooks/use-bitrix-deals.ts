@@ -241,11 +241,39 @@ export function useBitrixDeals() {
         }
       }
 
-      // Получаем информацию о контактах
-      const contactIds = [...new Set(allDeals.map((deal: any) => deal.CONTACT_ID))].filter(Boolean);
+      // Получаем информацию о контактах (собираем ID из всех возможных полей)
+      const contactIdsSet = new Set<string>();
+      allDeals.forEach((deal: any) => {
+        // Одиночный контакт
+        if (deal.CONTACT_ID) contactIdsSet.add(String(deal.CONTACT_ID));
+        
+        // Множественные контакты
+        if (deal.CONTACT_IDS && Array.isArray(deal.CONTACT_IDS)) {
+          deal.CONTACT_IDS.forEach((id: any) => contactIdsSet.add(String(id)));
+        }
+        
+        // Проверяем пользовательские поля на наличие контактов
+        Object.entries(deal).forEach(([key, value]) => {
+          if (key.startsWith('UF_CRM_') && value) {
+            // Если значение - массив ID
+            if (Array.isArray(value)) {
+              value.forEach(v => {
+                if (v && !isNaN(Number(v))) contactIdsSet.add(String(v));
+              });
+            }
+            // Если значение - одиночный ID
+            else if (!isNaN(Number(value))) {
+              contactIdsSet.add(String(value));
+            }
+          }
+        });
+      });
+      
+      const contactIds = Array.from(contactIdsSet).filter(Boolean);
       const contactMap = new Map();
       
       if (contactIds.length > 0) {
+        console.log(`Загружаем ${contactIds.length} контактов...`);
         for (let i = 0; i < contactIds.length; i += 50) {
           const chunk = contactIds.slice(i, i + 50);
           const contactsResponse = await fetch(`${webhookUrl}crm.contact.list.json?${chunk.map(id => `ID[]=${id}`).join('&')}`);
@@ -253,10 +281,51 @@ export function useBitrixDeals() {
           
           if (contactsData.result) {
             contactsData.result.forEach((contact: any) => {
-              contactMap.set(contact.ID, `${contact.NAME || ''} ${contact.LAST_NAME || ''}`.trim());
+              const name = `${contact.NAME || ''} ${contact.LAST_NAME || ''}`.trim() || contact.ID;
+              contactMap.set(String(contact.ID), name);
             });
           }
         }
+        console.log(`Загружено контактов: ${contactMap.size}`);
+      }
+
+      // Получаем информацию о компаниях
+      const companyIdsSet = new Set<string>();
+      allDeals.forEach((deal: any) => {
+        if (deal.COMPANY_ID) companyIdsSet.add(String(deal.COMPANY_ID));
+        
+        // Проверяем пользовательские поля на наличие компаний
+        Object.entries(deal).forEach(([key, value]) => {
+          if ((key.includes('COMPANY') || key.includes('КОМПАН')) && value) {
+            if (Array.isArray(value)) {
+              value.forEach(v => {
+                if (v && !isNaN(Number(v))) companyIdsSet.add(String(v));
+              });
+            } else if (!isNaN(Number(value))) {
+              companyIdsSet.add(String(value));
+            }
+          }
+        });
+      });
+      
+      const companyIds = Array.from(companyIdsSet).filter(Boolean);
+      const companyMap = new Map();
+      
+      if (companyIds.length > 0) {
+        console.log(`Загружаем ${companyIds.length} компаний...`);
+        for (let i = 0; i < companyIds.length; i += 50) {
+          const chunk = companyIds.slice(i, i + 50);
+          const companiesResponse = await fetch(`${webhookUrl}crm.company.list.json?${chunk.map(id => `ID[]=${id}`).join('&')}`);
+          const companiesData = await companiesResponse.json();
+          
+          if (companiesData.result) {
+            companiesData.result.forEach((company: any) => {
+              const name = company.TITLE || company.ID;
+              companyMap.set(String(company.ID), name);
+            });
+          }
+        }
+        console.log(`Загружено компаний: ${companyMap.size}`);
       }
 
       console.log("Загружено сделок:", allDeals.length);
@@ -291,9 +360,33 @@ export function useBitrixDeals() {
         dealData["Отдел"] = deal.UF_CRM_1589877847 || "—";
         dealData["Сумма"] = deal.OPPORTUNITY || "0";
         dealData["Валюта"] = deal.CURRENCY_ID || "RUB";
-        dealData["Компания"] = deal.COMPANY_TITLE || "—";
+        
+        // Компания - берем из COMPANY_TITLE или резолвим из COMPANY_ID
+        if (deal.COMPANY_TITLE) {
+          dealData["Компания"] = deal.COMPANY_TITLE;
+        } else if (deal.COMPANY_ID) {
+          dealData["Компания"] = companyMap.get(String(deal.COMPANY_ID)) || deal.COMPANY_ID;
+        } else {
+          dealData["Компания"] = "—";
+        }
+        
         dealData["Комментарии"] = deal.COMMENTS || "—";
-        dealData["Контакт"] = contactMap.get(deal.CONTACT_ID) || "—";
+        
+        // Контакт - обрабатываем одиночный и множественный
+        if (deal.CONTACT_IDS && Array.isArray(deal.CONTACT_IDS) && deal.CONTACT_IDS.length > 0) {
+          const contactNames = deal.CONTACT_IDS
+            .map((id: any) => contactMap.get(String(id)) || id)
+            .filter(Boolean);
+          dealData["Контакт"] = contactNames.length > 0 ? contactNames.join(", ") : "—";
+        } else if (deal.CONTACT_ID) {
+          dealData["Контакт"] = contactMap.get(String(deal.CONTACT_ID)) || deal.CONTACT_ID;
+        } else {
+          dealData["Контакт"] = "—";
+        }
+        
+        // Сохраняем маппинги для использования в компоненте
+        dealData._contactMap = contactMap;
+        dealData._companyMap = companyMap;
         dealData["Дата начала"] = deal.BEGINDATE || null;
         dealData["Дата закрытия"] = deal.CLOSEDATE || null;
         dealData["Тип"] = deal.TYPE_ID || "—";
@@ -447,3 +540,6 @@ export function useBitrixDeals() {
     stageMetadata,
   };
 }
+
+// Экспортируем типы для использования в компоненте
+export type { FieldMetadata, StageMetadata };
