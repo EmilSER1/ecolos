@@ -33,7 +33,7 @@ export function StageTransitions({ transitions, file1Name, file2Name }: StageTra
       </CardHeader>
       <CardContent>
         <div className="overflow-auto">
-          <Table>
+          <Table id="stage-transitions-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[100px]">ID</TableHead>

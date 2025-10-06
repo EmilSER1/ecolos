@@ -1,6 +1,9 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { TaskComparison as TaskComparisonType } from "@/hooks/use-file-comparison";
+import { Download } from "lucide-react";
+import { exportMultipleTablesToExcel } from "@/lib/export";
 
 interface TaskComparisonProps {
   comparison: TaskComparisonType;
@@ -20,8 +23,21 @@ export function TaskComparison({ comparison, file1Name, file2Name }: TaskCompari
     return change.toString();
   };
 
+  const handleExport = () => {
+    exportMultipleTablesToExcel(
+      ["#task-statuses-table", "#task-assignees-table", "#task-creators-table"],
+      `task-comparison-${file1Name}-${file2Name}.xls`
+    );
+  };
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button onClick={handleExport}>
+          <Download className="mr-2 h-4 w-4" />
+          Экспорт всех таблиц в Excel
+        </Button>
+      </div>
       {/* Точное сравнение А/В - Статусы */}
       <Card>
         <CardHeader>
@@ -32,7 +48,7 @@ export function TaskComparison({ comparison, file1Name, file2Name }: TaskCompari
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="task-statuses-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[200px]">Статус</TableHead>
@@ -69,7 +85,7 @@ export function TaskComparison({ comparison, file1Name, file2Name }: TaskCompari
           <CardTitle>Исполнители</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="task-assignees-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[200px]">Исполнитель</TableHead>
@@ -107,7 +123,7 @@ export function TaskComparison({ comparison, file1Name, file2Name }: TaskCompari
           <CardTitle>Постановщики</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="task-creators-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[200px]">Постановщик</TableHead>

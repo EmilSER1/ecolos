@@ -1,7 +1,10 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { DealComparison as DealComparisonType } from "@/hooks/use-file-comparison";
 import { StageTransitions } from "./StageTransitions";
+import { Download } from "lucide-react";
+import { exportMultipleTablesToExcel } from "@/lib/export";
 
 interface DealComparisonProps {
   comparison: DealComparisonType;
@@ -38,8 +41,22 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
 
   const { file1Stages, file2Stages } = getFileCounts();
 
+  const handleExport = () => {
+    exportMultipleTablesToExcel(
+      ["#stage-transitions-table", "#deal-stages-table", "#deal-depts-table", "#deal-assignees-table"],
+      `deal-comparison-${file1Name}-${file2Name}.xls`
+    );
+  };
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button onClick={handleExport}>
+          <Download className="mr-2 h-4 w-4" />
+          Экспорт всех таблиц в Excel
+        </Button>
+      </div>
+
       {/* Перемещения по стадиям */}
       <StageTransitions 
         transitions={comparison.stageTransitions} 
@@ -57,7 +74,7 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="deal-stages-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[250px]">Стадия</TableHead>
@@ -90,7 +107,7 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
           <CardTitle>Отделы • Файлы</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="deal-depts-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[200px]">Отдел</TableHead>
@@ -127,7 +144,7 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
           <CardTitle>Ответственные</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table id="deal-assignees-table">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[200px]">Ответственный</TableHead>

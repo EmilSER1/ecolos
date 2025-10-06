@@ -4,8 +4,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download } from "lucide-react";
-import { fmt } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Download, CalendarIcon } from "lucide-react";
+import { fmt, cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface TasksTabProps {
   tasks: Task[];
@@ -191,39 +194,107 @@ export function TasksTab({ tasks }: TasksTabProps) {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               <label className="text-sm whitespace-nowrap">Создана с:</label>
-              <Input
-                type="date"
-                value={fromCreated}
-                onChange={(e) => setFromCreated(e.target.value)}
-                className="w-40"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[180px] justify-start text-left font-normal",
+                      !fromCreated && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromCreated ? format(new Date(fromCreated), "dd.MM.yyyy") : "дд.мм.гггг"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromCreated ? new Date(fromCreated) : undefined}
+                    onSelect={(date) => setFromCreated(date ? format(date, "yyyy-MM-dd") : "")}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="flex items-center gap-2">
               <label className="text-sm">по:</label>
-              <Input
-                type="date"
-                value={toCreated}
-                onChange={(e) => setToCreated(e.target.value)}
-                className="w-40"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[180px] justify-start text-left font-normal",
+                      !toCreated && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toCreated ? format(new Date(toCreated), "dd.MM.yyyy") : "дд.мм.гггг"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toCreated ? new Date(toCreated) : undefined}
+                    onSelect={(date) => setToCreated(date ? format(date, "yyyy-MM-dd") : "")}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="flex items-center gap-2">
               <label className="text-sm whitespace-nowrap">Закрыта с:</label>
-              <Input
-                type="date"
-                value={fromClosed}
-                onChange={(e) => setFromClosed(e.target.value)}
-                className="w-40"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[180px] justify-start text-left font-normal",
+                      !fromClosed && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromClosed ? format(new Date(fromClosed), "dd.MM.yyyy") : "дд.мм.гггг"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fromClosed ? new Date(fromClosed) : undefined}
+                    onSelect={(date) => setFromClosed(date ? format(date, "yyyy-MM-dd") : "")}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="flex items-center gap-2">
               <label className="text-sm">по:</label>
-              <Input
-                type="date"
-                value={toClosed}
-                onChange={(e) => setToClosed(e.target.value)}
-                className="w-40"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[180px] justify-start text-left font-normal",
+                      !toClosed && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toClosed ? format(new Date(toClosed), "dd.MM.yyyy") : "дд.мм.гггг"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={toClosed ? new Date(toClosed) : undefined}
+                    onSelect={(date) => setToClosed(date ? format(date, "yyyy-MM-dd") : "")}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardHeader>
