@@ -1,4 +1,22 @@
 export function exportTableToExcel(table: HTMLElement, filename: string) {
+  // Клонируем таблицу для обработки
+  const clonedTable = table.cloneNode(true) as HTMLElement;
+  
+  // Применяем инлайн-стили на основе классов
+  const cells = clonedTable.querySelectorAll('th, td');
+  cells.forEach((cell) => {
+    const computedStyle = window.getComputedStyle(cell as Element);
+    const bgColor = computedStyle.backgroundColor;
+    const color = computedStyle.color;
+    const fontWeight = computedStyle.fontWeight;
+    
+    (cell as HTMLElement).style.backgroundColor = bgColor;
+    (cell as HTMLElement).style.color = color;
+    (cell as HTMLElement).style.fontWeight = fontWeight;
+    (cell as HTMLElement).style.border = '1px solid #ddd';
+    (cell as HTMLElement).style.padding = '8px';
+  });
+
   const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -6,10 +24,9 @@ export function exportTableToExcel(table: HTMLElement, filename: string) {
   <style>
     table { border-collapse: collapse; }
     td, th { border: 1px solid #ddd; padding: 8px; }
-    th { background-color: #f2f2f2; font-weight: bold; }
   </style>
 </head>
-<body>${table.outerHTML}</body>
+<body>${clonedTable.outerHTML}</body>
 </html>`;
 
   const blob = new Blob([html], { type: "application/vnd.ms-excel" });
@@ -22,9 +39,32 @@ export function exportTableToExcel(table: HTMLElement, filename: string) {
 
 export function exportMultipleTablesToExcel(tableIds: string[], filename: string) {
   const tables = tableIds
-    .map((id) => document.querySelector(id))
+    .map((id) => {
+      const table = document.querySelector(id);
+      if (!table) return "";
+      
+      // Клонируем таблицу для обработки
+      const clonedTable = table.cloneNode(true) as HTMLElement;
+      
+      // Применяем инлайн-стили на основе классов
+      const cells = clonedTable.querySelectorAll('th, td');
+      cells.forEach((cell) => {
+        const originalCell = table.querySelector(`[data-cell-id="${(cell as HTMLElement).dataset.cellId}"]`) || cell;
+        const computedStyle = window.getComputedStyle(originalCell as Element);
+        const bgColor = computedStyle.backgroundColor;
+        const color = computedStyle.color;
+        const fontWeight = computedStyle.fontWeight;
+        
+        (cell as HTMLElement).style.backgroundColor = bgColor;
+        (cell as HTMLElement).style.color = color;
+        (cell as HTMLElement).style.fontWeight = fontWeight;
+        (cell as HTMLElement).style.border = '1px solid #ddd';
+        (cell as HTMLElement).style.padding = '8px';
+      });
+      
+      return clonedTable.outerHTML;
+    })
     .filter(Boolean)
-    .map((el) => el?.outerHTML || "")
     .join("<br><br>");
 
   const html = `<!DOCTYPE html>
@@ -34,7 +74,6 @@ export function exportMultipleTablesToExcel(tableIds: string[], filename: string
   <style>
     table { border-collapse: collapse; margin-bottom: 20px; }
     td, th { border: 1px solid #ddd; padding: 8px; }
-    th { background-color: #f2f2f2; font-weight: bold; }
   </style>
 </head>
 <body>${tables}</body>
