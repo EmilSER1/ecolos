@@ -14,7 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      deal_files: {
+        Row: {
+          file_data: Json
+          file_name: string
+          id: string
+          metadata: Json | null
+          uploaded_at: string
+        }
+        Insert: {
+          file_data: Json
+          file_name: string
+          id?: string
+          metadata?: Json | null
+          uploaded_at?: string
+        }
+        Update: {
+          file_data?: Json
+          file_name?: string
+          id?: string
+          metadata?: Json | null
+          uploaded_at?: string
+        }
+        Relationships: []
+      }
+      task_files: {
+        Row: {
+          file_data: Json
+          file_name: string
+          id: string
+          uploaded_at: string
+        }
+        Insert: {
+          file_data: Json
+          file_name: string
+          id?: string
+          uploaded_at?: string
+        }
+        Update: {
+          file_data?: Json
+          file_name?: string
+          id?: string
+          uploaded_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

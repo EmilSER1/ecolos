@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Deal, Task } from "@/types/crm";
 import { readFileSmart, parseCSVText } from "@/lib/csv-parser";
 import { normalizeDeals, mergeDeals } from "@/lib/normalizers";
-import { addDealFile, addTaskFile } from "@/lib/storage";
+import { addDealFile, addTaskFile, calcAutoMeta } from "@/lib/storage";
+import { saveDealFileToCloud, saveTaskFileToCloud } from "@/lib/cloud-storage";
 import { toast } from "@/hooks/use-toast";
 
 export function useDeals() {
@@ -21,12 +22,25 @@ export function useDeals() {
         setDeals((prev) => mergeDeals(prev, normalized));
       }
 
+      // Сохраняем локально
       addDealFile(file.name, normalized);
 
-      toast({
-        title: "Сделки импортированы",
-        description: `Загружено: ${normalized.length}, пропущено: ${info.ignored}`,
-      });
+      // Сохраняем в облако
+      const metadata = calcAutoMeta(normalized);
+      const cloudResult = await saveDealFileToCloud(file.name, normalized, metadata);
+      
+      if (cloudResult.success) {
+        toast({
+          title: "Сделки импортированы",
+          description: `Загружено: ${normalized.length}, пропущено: ${info.ignored}. Сохранено в облако.`,
+        });
+      } else {
+        toast({
+          title: "Сделки импортированы",
+          description: `Загружено: ${normalized.length}, пропущено: ${info.ignored}. Предупреждение: не удалось сохранить в облако.`,
+          variant: "destructive",
+        });
+      }
 
       return { success: true, count: normalized.length, ignored: info.ignored };
     } catch (e) {
@@ -45,7 +59,7 @@ export function useDeals() {
       const text = await readFileSmart(file);
       const rows = parseCSVText(text);
       
-      const normTasks = (rows: Record<string, string>[]): Task[] => {
+      const normalizeTasks = (rows: Record<string, string>[]): Task[] => {
         const norm = (s: string) =>
           String(s || "")
             .toLowerCase()
@@ -80,15 +94,27 @@ export function useDeals() {
         }));
       };
 
-      const normalized = normTasks(rows);
+      const normalized = normalizeTasks(rows);
       setTasks(normalized);
       
+      // Сохраняем локально
       addTaskFile(file.name, normalized);
 
-      toast({
-        title: "Задачи импортированы",
-        description: `Загружено: ${normalized.length}`,
-      });
+      // Сохраняем в облако
+      const cloudResult = await saveTaskFileToCloud(file.name, normalized);
+      
+      if (cloudResult.success) {
+        toast({
+          title: "Задачи импортированы",
+          description: `Загружено: ${normalized.length}. Сохранено в облако.`,
+        });
+      } else {
+        toast({
+          title: "Задачи импортированы",
+          description: `Загружено: ${normalized.length}. Предупреждение: не удалось сохранить в облако.`,
+          variant: "destructive",
+        });
+      }
 
       return { success: true, count: normalized.length };
     } catch (e) {
