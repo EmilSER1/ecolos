@@ -42,7 +42,7 @@ const Index = () => {
       />
 
       <main className="container mx-auto p-4">
-        {activeTab === "dashboard" && <DashboardTab deals={deals} />}
+        {activeTab === "dashboard" && <DashboardTab deals={deals} tasks={tasks} />}
         {activeTab === "mismatch" && <MismatchTab deals={deals} />}
         {activeTab === "stale" && <StaleTab deals={deals} />}
         {activeTab === "tasks" && <TasksTab tasks={tasks} />}
