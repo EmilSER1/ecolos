@@ -246,10 +246,11 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
                         let value = dealData[column];
                         const contactMap = dealData._contactMap;
                         const companyMap = dealData._companyMap;
+                        const meta = fieldMetadata[column];
                         
                         // Преобразуем значения списков из ID в текст
-                        if (fieldMetadata[column]?.items && value !== null && value !== undefined && value !== "") {
-                          const items = fieldMetadata[column].items!;
+                        if (meta?.items && value !== null && value !== undefined && value !== "") {
+                          const items = meta.items!;
                           
                           // Может быть одно значение или массив
                           if (Array.isArray(value)) {
@@ -259,23 +260,51 @@ export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDe
                           }
                         }
                         
-                        // Преобразуем ID контактов в имена
-                        if (contactMap && (column.toLowerCase().includes('контакт') || column.toLowerCase().includes('contact'))) {
-                          if (Array.isArray(value)) {
-                            const names = value.map(v => contactMap.get(String(v)) || v).filter(Boolean);
+                        // Резолвим контакты и компании через маппинги
+                        // Проверяем по типу поля или по содержимому значения
+                        if (contactMap && companyMap) {
+                          const fieldType = meta?.type || '';
+                          const fieldTitle = (meta?.title || column).toLowerCase();
+                          
+                          // Определяем, является ли поле контактом или компанией
+                          const isContactField = fieldType.includes('contact') || 
+                                                fieldTitle.includes('контакт') || 
+                                                fieldTitle.includes('contact');
+                          
+                          const isCompanyField = fieldType.includes('company') || 
+                                               fieldTitle.includes('компан') || 
+                                               fieldTitle.includes('company') ||
+                                               fieldTitle.includes('заказчик') ||
+                                               fieldTitle.includes('подрядчик') ||
+                                               fieldTitle.includes('проектировщик');
+                          
+                          // Резолвим массивы ID
+                          if (Array.isArray(value) && value.length > 0) {
+                            const names = value.map(v => {
+                              const strId = String(v);
+                              if (/^\d+$/.test(strId)) {
+                                return contactMap.get(strId) || companyMap.get(strId) || v;
+                              }
+                              return v;
+                            }).filter(Boolean);
                             if (names.length > 0) value = names.join(", ");
-                          } else if (value && !isNaN(Number(value))) {
-                            value = contactMap.get(String(value)) || value;
                           }
-                        }
-                        
-                        // Преобразуем ID компаний в названия
-                        if (companyMap && (column.toLowerCase().includes('компан') || column.toLowerCase().includes('company'))) {
-                          if (Array.isArray(value)) {
-                            const names = value.map(v => companyMap.get(String(v)) || v).filter(Boolean);
-                            if (names.length > 0) value = names.join(", ");
-                          } else if (value && !isNaN(Number(value))) {
-                            value = companyMap.get(String(value)) || value;
+                          // Резолвим одиночные ID
+                          else if (value && /^\d+$/.test(String(value).trim())) {
+                            const strId = String(value).trim();
+                            const contactName = contactMap.get(strId);
+                            const companyName = companyMap.get(strId);
+                            
+                            // Приоритет отдаем в зависимости от типа поля
+                            if (isContactField && contactName) {
+                              value = contactName;
+                            } else if (isCompanyField && companyName) {
+                              value = companyName;
+                            } else if (contactName) {
+                              value = contactName;
+                            } else if (companyName) {
+                              value = companyName;
+                            }
                           }
                         }
                         
