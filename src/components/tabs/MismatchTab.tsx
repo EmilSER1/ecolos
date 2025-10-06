@@ -151,7 +151,7 @@ export function MismatchTab({ deals }: MismatchTabProps) {
               </thead>
               <tbody>
                 {tableData.rows.map((row, idx) => (
-                  <tr key={idx}>
+                  <tr key={idx} className={row.type === "dept" ? "bg-muted" : idx % 2 === 0 ? "bg-card" : "bg-muted/30"}>
                     <th
                       className={`border border-border p-2 text-left ${
                         row.type === "person" ? row.personClass : "bg-muted font-bold"

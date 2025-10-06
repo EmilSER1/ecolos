@@ -3,7 +3,6 @@ import { Deal } from "@/types/crm";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download } from "lucide-react";
 import { exportTableToExcel } from "@/lib/export";
 
@@ -63,7 +62,7 @@ export function StaleTab({ deals }: StaleTabProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
-        <CardTitle>Сделки открыты {days}+ дней ({staleDeals.length})</CardTitle>
+        <CardTitle>Более {days} дней без изменений</CardTitle>
         <div className="flex items-center gap-2">
           <label className="text-sm">Дней:</label>
           <Input
@@ -86,30 +85,30 @@ export function StaleTab({ deals }: StaleTabProps) {
           <p className="text-muted-foreground">Нет сделок открытых более {days} дней</p>
         ) : (
           <div className="overflow-auto">
-            <Table id="stale-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID сделки</TableHead>
-                  <TableHead>Ответственный</TableHead>
-                  <TableHead>Стадия сделки</TableHead>
-                  <TableHead>Отдел</TableHead>
-                  <TableHead>Дата создания</TableHead>
-                  <TableHead className="text-right">Дней открыта</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table id="stale-table" className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-card">
+                  <th className="border border-border bg-muted p-3 text-left font-semibold">ID сделки</th>
+                  <th className="border border-border bg-muted p-3 text-left font-semibold">Ответственный</th>
+                  <th className="border border-border bg-muted p-3 text-left font-semibold">Стадия сделки</th>
+                  <th className="border border-border bg-muted p-3 text-left font-semibold">Отдел</th>
+                  <th className="border border-border bg-muted p-3 text-left font-semibold">Дата создания</th>
+                  <th className="border border-border bg-muted p-3 text-right font-semibold">Дней открыта</th>
+                </tr>
+              </thead>
+              <tbody>
                 {staleDeals.map((deal, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{deal["ID сделки"]}</TableCell>
-                    <TableCell>{deal["Ответственный"]}</TableCell>
-                    <TableCell>{deal["Стадия сделки"]}</TableCell>
-                    <TableCell>{deal["Отдел"]}</TableCell>
-                    <TableCell>{deal["Дата создания"]}</TableCell>
-                    <TableCell className="text-right font-bold text-destructive">{deal.daysOpen}</TableCell>
-                  </TableRow>
+                  <tr key={idx} className={idx % 2 === 0 ? "bg-card" : "bg-muted/30"}>
+                    <td className="border border-border p-3">{deal["ID сделки"]}</td>
+                    <td className="border border-border p-3">{deal["Ответственный"]}</td>
+                    <td className="border border-border p-3">{deal["Стадия сделки"]}</td>
+                    <td className="border border-border p-3">{deal["Отдел"]}</td>
+                    <td className="border border-border p-3">{deal["Дата создания"]}</td>
+                    <td className="border border-border p-3 text-right font-bold text-destructive">{deal.daysOpen}</td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
         )}
       </CardContent>
