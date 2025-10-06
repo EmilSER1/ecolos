@@ -13,8 +13,8 @@ interface CRMHeaderProps {
 }
 
 const tabs = [
+  { id: "dashboard", label: "Дашборд" },
   { id: "mismatch", label: "Несоответствия" },
-  { id: "dashboard", label: "Главная" },
   { id: "stale", label: "200+ дней" },
   { id: "tasks", label: "Задачи" },
   { id: "compare", label: "Сравнение" },
