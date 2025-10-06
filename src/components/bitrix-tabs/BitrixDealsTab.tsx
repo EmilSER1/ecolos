@@ -12,19 +12,30 @@ interface FieldMetadata {
   };
 }
 
+interface StageMetadata {
+  [key: string]: {
+    name: string;
+    color: string;
+  };
+}
+
 interface BitrixDealsTabProps {
   deals: Deal[];
   fieldMetadata: FieldMetadata;
+  stageMetadata: StageMetadata;
 }
 
-export function BitrixDealsTab({ deals, fieldMetadata }: BitrixDealsTabProps) {
+export function BitrixDealsTab({ deals, fieldMetadata, stageMetadata }: BitrixDealsTabProps) {
   const [selectedStage, setSelectedStage] = useState<string>("all");
 
-  const getStageColor = (stage: string) => {
-    if (stage.includes("Новая")) return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-    if (stage.includes("работе")) return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-    if (stage.includes("подписан")) return "bg-green-500/10 text-green-500 border-green-500/20";
-    if (stage.includes("провалена")) return "bg-red-500/10 text-red-500 border-red-500/20";
+  const getStageColorFromBitrix = (stageName: string): string => {
+    // Ищем стадию по имени в метаданных
+    const stageEntry = Object.entries(stageMetadata).find(([_, data]) => data.name === stageName);
+    if (stageEntry && stageEntry[1].color) {
+      const color = stageEntry[1].color;
+      // Конвертируем hex цвет в tailwind классы
+      return `border-2` + ` text-foreground`;
+    }
     return "bg-gray-500/10 text-gray-500 border-gray-500/20";
   };
 
@@ -79,6 +90,13 @@ export function BitrixDealsTab({ deals, fieldMetadata }: BitrixDealsTabProps) {
   // Получаем все колонки, включая пользовательские поля
   const allColumns = useMemo(() => {
     if (deals.length === 0) return [];
+    
+    // Собираем все уникальные ключи из всех сделок
+    const allKeys = new Set<string>();
+    deals.forEach(deal => {
+      Object.keys(deal).forEach(key => allKeys.add(key));
+    });
+    
     const standardColumns = [
       "ID сделки", "Название", "Ответственный", "Стадия сделки", "Отдел",
       "Сумма", "Валюта", "Компания", "Контакт", "Комментарии",
@@ -86,11 +104,12 @@ export function BitrixDealsTab({ deals, fieldMetadata }: BitrixDealsTabProps) {
       "Дата создания", "Дата изменения", "Дата начала", "Дата закрытия"
     ];
     
-    // Находим все дополнительные поля из первой сделки
-    const firstDeal = deals[0] as any;
-    const customFields = Object.keys(firstDeal).filter(
-      key => !standardColumns.includes(key) && key.startsWith('UF_CRM_')
+    // Находим все пользовательские поля (UF_CRM_*)
+    const customFields = Array.from(allKeys).filter(
+      key => key.startsWith('UF_CRM_') && !standardColumns.includes(key)
     );
+    
+    console.log("Найдено пользовательских полей:", customFields.length, customFields);
     
     return [...standardColumns, ...customFields];
   }, [deals]);
@@ -148,11 +167,21 @@ export function BitrixDealsTab({ deals, fieldMetadata }: BitrixDealsTabProps) {
                       {allColumns.map(column => {
                         const value = dealData[column];
                         
-                        // Специальная обработка для стадии
+                        // Специальная обработка для стадии с цветами из Bitrix
                         if (column === "Стадия сделки") {
+                          const stageEntry = Object.entries(stageMetadata).find(([_, data]) => data.name === value);
+                          const bgColor = stageEntry && stageEntry[1].color ? stageEntry[1].color : "#808080";
+                          
                           return (
                             <TableCell key={column}>
-                              <Badge variant="outline" className={getStageColor(value)}>
+                              <Badge 
+                                variant="outline" 
+                                style={{ 
+                                  backgroundColor: bgColor,
+                                  color: "white",
+                                  borderColor: bgColor
+                                }}
+                              >
                                 {value}
                               </Badge>
                             </TableCell>

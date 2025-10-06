@@ -10,6 +10,13 @@ interface FieldMetadata {
   };
 }
 
+interface StageMetadata {
+  [key: string]: {
+    name: string;
+    color: string;
+  };
+}
+
   // Маппинг стадий Bitrix24 на русские названия
   const stageMapping: Record<string, string> = {
     "NEW": "Новая",
@@ -42,16 +49,36 @@ export function useBitrixDeals() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [fieldMetadata, setFieldMetadata] = useState<FieldMetadata>({});
+  const [stageMetadata, setStageMetadata] = useState<StageMetadata>({});
 
   const fetchDealsFromBitrix = async (webhookUrl: string) => {
     setLoading(true);
     try {
+      // Сначала находим ID воронки ПРОДАЖИ
+      console.log("Загружаем список воронок...");
+      const categoriesResponse = await fetch(`${webhookUrl}crm.dealcategory.list.json`);
+      let salesCategoryId = "0"; // По умолчанию основная воронка
+      
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json();
+        if (categoriesData.result) {
+          const salesCategory = categoriesData.result.find((cat: any) => 
+            cat.NAME && cat.NAME.toLowerCase().includes('продаж')
+          );
+          if (salesCategory) {
+            salesCategoryId = salesCategory.ID;
+            console.log("Найдена воронка ПРОДАЖИ с ID:", salesCategoryId);
+          }
+        }
+      }
+
       // Загружаем метаданные полей
+      console.log("Загружаем метаданные полей...");
       const fieldsResponse = await fetch(`${webhookUrl}crm.deal.fields.json`);
+      const metadata: FieldMetadata = {};
+      
       if (fieldsResponse.ok) {
         const fieldsData = await fieldsResponse.json();
-        const metadata: FieldMetadata = {};
-        
         if (fieldsData.result) {
           for (const [key, value] of Object.entries(fieldsData.result)) {
             const field = value as any;
@@ -61,35 +88,54 @@ export function useBitrixDeals() {
             };
           }
         }
-        
         setFieldMetadata(metadata);
-        console.log("Метаданные полей загружены:", Object.keys(metadata).length, "полей");
+        console.log("Метаданные полей загружены:", Object.keys(metadata).length);
       }
 
-      // Загружаем названия стадий
-      const stagesResponse = await fetch(`${webhookUrl}crm.dealcategory.stage.list.json`);
-      const updatedStageMapping: Record<string, string> = { ...stageMapping };
+      // Загружаем стадии с цветами для воронки ПРОДАЖИ
+      console.log("Загружаем стадии воронки ПРОДАЖИ...");
+      const stagesResponse = await fetch(`${webhookUrl}crm.dealcategory.stage.list.json`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: salesCategoryId })
+      });
+      
+      const stageData: StageMetadata = {};
+      const stageNameMapping: Record<string, string> = {};
       
       if (stagesResponse.ok) {
         const stagesData = await stagesResponse.json();
         if (stagesData.result) {
           stagesData.result.forEach((stage: any) => {
-            updatedStageMapping[stage.STATUS_ID] = stage.NAME;
+            stageData[stage.STATUS_ID] = {
+              name: stage.NAME,
+              color: stage.COLOR || "#808080"
+            };
+            stageNameMapping[stage.STATUS_ID] = stage.NAME;
           });
         }
-        console.log("Названия стадий загружены:", Object.keys(updatedStageMapping).length, "стадий");
+        setStageMetadata(stageData);
+        console.log("Загружено стадий:", Object.keys(stageData).length);
       }
 
-      // Загружаем все сделки с пагинацией
+      // Загружаем сделки только из воронки ПРОДАЖИ
+      console.log("Загружаем сделки из воронки ПРОДАЖИ...");
       let allDeals: any[] = [];
       let start = 0;
       const limit = 50;
       let hasMore = true;
 
       while (hasMore) {
-        // Загружаем все поля, включая пользовательские (UF_CRM_*)
         const response = await fetch(
-          `${webhookUrl}crm.deal.list.json?start=${start}`
+          `${webhookUrl}crm.deal.list.json`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              start,
+              filter: { CATEGORY_ID: salesCategoryId }
+            })
+          }
         );
         
         if (!response.ok) {
@@ -149,10 +195,12 @@ export function useBitrixDeals() {
         }
       }
 
-      // Преобразуем данные Bitrix в формат Deal с русскими названиями стадий
+      console.log("Пример первой сделки (все поля):", allDeals[0]);
+      
+      // Преобразуем данные Bitrix в формат Deal
       const bitrixDeals = allDeals.map((deal: any) => {
         const stageId = deal.STAGE_ID || "";
-        const stageName = updatedStageMapping[stageId] || stageId;
+        const stageName = stageNameMapping[stageId] || stageId;
         
         // Базовые поля
         const dealData: any = {
@@ -175,15 +223,31 @@ export function useBitrixDeals() {
           "Источник": deal.SOURCE_ID || "—",
         };
 
-        // Добавляем все пользовательские поля (UF_CRM_*)
+        // Добавляем ВСЕ пользовательские поля (UF_CRM_*)
         Object.keys(deal).forEach(key => {
-          if (key.startsWith('UF_CRM_') && key !== 'UF_CRM_1589877847') {
-            dealData[key] = deal[key] || "—";
+          if (key.startsWith('UF_CRM_')) {
+            // Обрабатываем значение поля
+            let value = deal[key];
+            
+            // Если это массив, преобразуем в строку
+            if (Array.isArray(value)) {
+              value = value.join(', ');
+            }
+            
+            // Если это объект, преобразуем в JSON-строку
+            if (value && typeof value === 'object') {
+              value = JSON.stringify(value);
+            }
+            
+            dealData[key] = value || "—";
           }
         });
 
         return dealData;
       });
+
+      console.log("Пример обработанной сделки:", bitrixDeals[0]);
+      console.log("Все ключи первой сделки:", Object.keys(bitrixDeals[0]));
 
       // Нормализуем данные
       const { rows: normalized } = normalizeDeals(bitrixDeals);
@@ -319,5 +383,6 @@ export function useBitrixDeals() {
     fetchDealsFromBitrix,
     fetchTasksFromBitrix,
     fieldMetadata,
+    stageMetadata,
   };
 }
