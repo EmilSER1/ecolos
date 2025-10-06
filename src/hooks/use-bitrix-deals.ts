@@ -133,7 +133,8 @@ export function useBitrixDeals() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               start,
-              filter: { CATEGORY_ID: salesCategoryId }
+              filter: { CATEGORY_ID: salesCategoryId },
+              select: ["*", "UF_*"] // Явно запрашиваем все поля включая пользовательские
             })
           }
         );
