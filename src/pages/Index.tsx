@@ -6,11 +6,13 @@ import { MismatchTab } from "@/components/tabs/MismatchTab";
 import { StaleTab } from "@/components/tabs/StaleTab";
 import { TasksTab } from "@/components/tabs/TasksTab";
 import { CompareTab } from "@/components/tabs/CompareTab";
+import { FilesTab } from "@/components/tabs/FilesTab";
+import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [dealMode, setDealMode] = useState<"replace" | "merge">("replace");
-  const { deals, tasks, importDeals, importTasks } = useDeals();
+  const { deals, tasks, loading, importDeals, importTasks } = useDeals();
 
   const handleDealImport = async (file: File, mode: "replace" | "merge") => {
     await importDeals(file, mode);
@@ -19,6 +21,14 @@ const Index = () => {
   const handleTaskImport = async (file: File) => {
     await importTasks(file);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,6 +47,7 @@ const Index = () => {
         {activeTab === "stale" && <StaleTab deals={deals} />}
         {activeTab === "tasks" && <TasksTab tasks={tasks} />}
         {activeTab === "compare" && <CompareTab />}
+        {activeTab === "files" && <FilesTab />}
       </main>
     </div>
   );

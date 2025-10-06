@@ -1,14 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Deal, Task } from "@/types/crm";
 import { readFileSmart, parseCSVText } from "@/lib/csv-parser";
 import { normalizeDeals, mergeDeals } from "@/lib/normalizers";
 import { calcAutoMeta } from "@/lib/storage";
-import { saveDealFileToCloud, saveTaskFileToCloud } from "@/lib/cloud-storage";
+import { saveDealFileToCloud, saveTaskFileToCloud, getLatestDealFile, getLatestTaskFile } from "@/lib/cloud-storage";
 import { toast } from "@/hooks/use-toast";
 
 export function useDeals() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Автоматическая загрузка последних файлов при монтировании
+  useEffect(() => {
+    const loadLatestData = async () => {
+      try {
+        const [latestDeals, latestTasks] = await Promise.all([
+          getLatestDealFile(),
+          getLatestTaskFile()
+        ]);
+
+        if (latestDeals) {
+          setDeals(latestDeals.file_data);
+        }
+
+        if (latestTasks) {
+          setTasks(latestTasks.file_data);
+        }
+      } catch (error) {
+        console.error("Error loading latest data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadLatestData();
+  }, []);
 
   const importDeals = async (file: File, mode: "replace" | "merge") => {
     try {
@@ -125,6 +152,7 @@ export function useDeals() {
   return {
     deals,
     tasks,
+    loading,
     importDeals,
     importTasks,
   };

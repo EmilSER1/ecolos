@@ -18,6 +18,7 @@ const tabs = [
   { id: "stale", label: "200+ дней" },
   { id: "tasks", label: "Задачи" },
   { id: "compare", label: "Сравнение" },
+  { id: "files", label: "Файлы" },
 ];
 
 export function CRMHeader({

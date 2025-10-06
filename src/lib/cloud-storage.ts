@@ -171,3 +171,98 @@ export async function getTaskFileById(id: string): Promise<CloudTaskFile | null>
     return null;
   }
 }
+
+// Получение последнего файла сделок
+export async function getLatestDealFile(): Promise<CloudDealFile | null> {
+  try {
+    const { data, error } = await supabase
+      .from("deal_files")
+      .select("*")
+      .order("uploaded_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.error("Error loading latest deal file:", error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      file_name: data.file_name,
+      file_data: data.file_data as unknown as Deal[],
+      metadata: data.metadata as unknown as FileMeta,
+      uploaded_at: data.uploaded_at,
+    };
+  } catch (e) {
+    console.error("Error loading latest deal file:", e);
+    return null;
+  }
+}
+
+// Получение последнего файла задач
+export async function getLatestTaskFile(): Promise<CloudTaskFile | null> {
+  try {
+    const { data, error } = await supabase
+      .from("task_files")
+      .select("*")
+      .order("uploaded_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.error("Error loading latest task file:", error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      file_name: data.file_name,
+      file_data: data.file_data as unknown as Task[],
+      uploaded_at: data.uploaded_at,
+    };
+  } catch (e) {
+    console.error("Error loading latest task file:", e);
+    return null;
+  }
+}
+
+// Удаление файла сделок
+export async function deleteDealFile(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from("deal_files")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting deal file:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (e: any) {
+    console.error("Error deleting deal file:", e);
+    return { success: false, error: e.message };
+  }
+}
+
+// Удаление файла задач
+export async function deleteTaskFile(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from("task_files")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting task file:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (e: any) {
+    console.error("Error deleting task file:", e);
+    return { success: false, error: e.message };
+  }
+}
