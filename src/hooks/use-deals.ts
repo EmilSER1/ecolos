@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Deal, Task } from "@/types/crm";
 import { readFileSmart, parseCSVText } from "@/lib/csv-parser";
 import { normalizeDeals, mergeDeals } from "@/lib/normalizers";
-import { addDealFile, addTaskFile, calcAutoMeta } from "@/lib/storage";
+import { calcAutoMeta } from "@/lib/storage";
 import { saveDealFileToCloud, saveTaskFileToCloud } from "@/lib/cloud-storage";
 import { toast } from "@/hooks/use-toast";
 
@@ -21,9 +21,6 @@ export function useDeals() {
       } else {
         setDeals((prev) => mergeDeals(prev, normalized));
       }
-
-      // Сохраняем локально
-      addDealFile(file.name, normalized);
 
       // Сохраняем в облако
       const metadata = calcAutoMeta(normalized);
@@ -97,9 +94,6 @@ export function useDeals() {
       const normalized = normalizeTasks(rows);
       setTasks(normalized);
       
-      // Сохраняем локально
-      addTaskFile(file.name, normalized);
-
       // Сохраняем в облако
       const cloudResult = await saveTaskFileToCloud(file.name, normalized);
       
