@@ -48,6 +48,24 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
     });
   }, [deals, startDate, endDate]);
 
+  const filteredTasks = useMemo(() => {
+    if (!startDate && !endDate) return tasks;
+    
+    return tasks.filter((task) => {
+      const taskDate = parseDate(task["Дата создания"]);
+      if (!taskDate) return true;
+      
+      if (startDate && taskDate < startDate) return false;
+      if (endDate) {
+        const endOfDay = new Date(endDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (taskDate > endOfDay) return false;
+      }
+      
+      return true;
+    });
+  }, [tasks, startDate, endDate]);
+
   const handleExportPDF = async () => {
     const element = document.getElementById("dashboard-content");
     if (!element) return;
@@ -157,7 +175,7 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
     let completedTasks = 0;
     let activeTasks = 0;
 
-    tasks.forEach((task) => {
+    filteredTasks.forEach((task) => {
       const status = task.Статус || "—";
       statusCounts[status] = (statusCounts[status] || 0) + 1;
 
@@ -189,14 +207,14 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
       .map(([name, value]) => ({ name, value }));
 
     return {
-      total: tasks.length,
+      total: filteredTasks.length,
       completedTasks,
       activeTasks,
       statusData,
       executorData,
       creatorData,
     };
-  }, [tasks]);
+  }, [filteredTasks]);
 
   const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
