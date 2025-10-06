@@ -68,23 +68,42 @@ export function CRMHeader({
         ))}
       </nav>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          ref={dealInputRef}
-          type="file"
-          accept=".csv"
-          onChange={handleDealFileChange}
-          className="hidden"
-        />
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => dealInputRef.current?.click()}
-          className="bg-gradient-to-br from-primary to-cyan-400"
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          CSV сделки
-        </Button>
+      <div className="flex flex-wrap items-center gap-3 border-l border-border pl-3">
+        <div className="flex items-center gap-2">
+          <input
+            ref={dealInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleDealFileChange}
+            className="hidden"
+          />
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => dealInputRef.current?.click()}
+            className="bg-gradient-to-br from-primary to-cyan-400"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            CSV сделки
+          </Button>
+
+          <input
+            ref={taskInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleTaskFileChange}
+            className="hidden"
+          />
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => taskInputRef.current?.click()}
+            className="bg-gradient-to-br from-primary to-cyan-400"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            CSV задачи
+          </Button>
+        </div>
 
         <Select value={dealMode} onValueChange={(v) => onDealModeChange(v as "replace" | "merge")}>
           <SelectTrigger className="w-40">
@@ -95,22 +114,6 @@ export function CRMHeader({
             <SelectItem value="merge">Объединить</SelectItem>
           </SelectContent>
         </Select>
-
-        <input
-          ref={taskInputRef}
-          type="file"
-          accept=".csv"
-          onChange={handleTaskFileChange}
-          className="hidden"
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => taskInputRef.current?.click()}
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          CSV задачи
-        </Button>
       </div>
     </header>
   );

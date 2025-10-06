@@ -2,6 +2,14 @@ import { useState } from "react";
 import { loadDealFilesFromCloud, loadTaskFilesFromCloud, CloudDealFile, CloudTaskFile } from "@/lib/cloud-storage";
 import { Deal, Task } from "@/types/crm";
 
+export interface StageTransition {
+  dealId: string;
+  oldStage: string;
+  newStage: string;
+  responsible: string;
+  department: string;
+}
+
 export interface DealComparison {
   totalChange: number;
   stageChanges: Record<string, number>;
@@ -9,6 +17,7 @@ export interface DealComparison {
   departmentChanges: Record<string, number>;
   newDeals: Deal[];
   removedDeals: Deal[];
+  stageTransitions: StageTransition[];
 }
 
 export interface TaskComparison {
@@ -99,6 +108,25 @@ export function useFileComparison() {
     const newDeals = deals2.filter(d => d["ID сделки"] && !ids1.has(d["ID сделки"]));
     const removedDeals = deals1.filter(d => d["ID сделки"] && !ids2.has(d["ID сделки"]));
 
+    // Перемещения по стадиям (сделки с одинаковым ID, но разными стадиями)
+    const stageTransitions: StageTransition[] = [];
+    const dealsMap1 = new Map(deals1.map(d => [d["ID сделки"], d]));
+    const dealsMap2 = new Map(deals2.map(d => [d["ID сделки"], d]));
+
+    dealsMap2.forEach((deal2, id) => {
+      if (!id) return;
+      const deal1 = dealsMap1.get(id);
+      if (deal1 && deal1["Стадия сделки"] !== deal2["Стадия сделки"]) {
+        stageTransitions.push({
+          dealId: id,
+          oldStage: deal1["Стадия сделки"] || "—",
+          newStage: deal2["Стадия сделки"] || "—",
+          responsible: deal2["Ответственный"] || "—",
+          department: deal2["Отдел"] || "—",
+        });
+      }
+    });
+
     return {
       totalChange: deals2.length - deals1.length,
       stageChanges,
@@ -106,6 +134,7 @@ export function useFileComparison() {
       departmentChanges,
       newDeals,
       removedDeals,
+      stageTransitions,
     };
   };
 

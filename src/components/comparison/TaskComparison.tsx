@@ -35,10 +35,10 @@ export function TaskComparison({ comparison, file1Name, file2Name }: TaskCompari
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Статус</TableHead>
-                <TableHead className="text-right">A</TableHead>
-                <TableHead className="text-right">B</TableHead>
-                <TableHead className="text-right">Δ</TableHead>
+                <TableHead className="min-w-[200px]">Статус</TableHead>
+                <TableHead className="text-right min-w-[80px]">A</TableHead>
+                <TableHead className="text-right min-w-[80px]">B</TableHead>
+                <TableHead className="text-right min-w-[80px]">Δ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -72,10 +72,10 @@ export function TaskComparison({ comparison, file1Name, file2Name }: TaskCompari
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Исполнитель</TableHead>
-                <TableHead className="text-right">A</TableHead>
-                <TableHead className="text-right">B</TableHead>
-                <TableHead className="text-right">Δ</TableHead>
+                <TableHead className="min-w-[200px]">Исполнитель</TableHead>
+                <TableHead className="text-right min-w-[80px]">A</TableHead>
+                <TableHead className="text-right min-w-[80px]">B</TableHead>
+                <TableHead className="text-right min-w-[80px]">Δ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -110,10 +110,10 @@ export function TaskComparison({ comparison, file1Name, file2Name }: TaskCompari
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Постановщик</TableHead>
-                <TableHead className="text-right">A</TableHead>
-                <TableHead className="text-right">B</TableHead>
-                <TableHead className="text-right">Δ</TableHead>
+                <TableHead className="min-w-[200px]">Постановщик</TableHead>
+                <TableHead className="text-right min-w-[80px]">A</TableHead>
+                <TableHead className="text-right min-w-[80px]">B</TableHead>
+                <TableHead className="text-right min-w-[80px]">Δ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

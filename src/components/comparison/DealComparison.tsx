@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DealComparison as DealComparisonType } from "@/hooks/use-file-comparison";
+import { StageTransitions } from "./StageTransitions";
 
 interface DealComparisonProps {
   comparison: DealComparisonType;
@@ -39,6 +40,13 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
 
   return (
     <div className="space-y-6">
+      {/* Перемещения по стадиям */}
+      <StageTransitions 
+        transitions={comparison.stageTransitions} 
+        file1Name={file1Name}
+        file2Name={file2Name}
+      />
+
       {/* Точное сравнение А/В - Стадии */}
       <Card>
         <CardHeader>
@@ -52,10 +60,10 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Стадия</TableHead>
-                <TableHead className="text-right">A</TableHead>
-                <TableHead className="text-right">B</TableHead>
-                <TableHead className="text-right">Δ</TableHead>
+                <TableHead className="min-w-[250px]">Стадия</TableHead>
+                <TableHead className="text-right min-w-[80px]">A</TableHead>
+                <TableHead className="text-right min-w-[80px]">B</TableHead>
+                <TableHead className="text-right min-w-[80px]">Δ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -85,10 +93,10 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Отдел</TableHead>
-                <TableHead className="text-right">A</TableHead>
-                <TableHead className="text-right">B</TableHead>
-                <TableHead className="text-right">Δ</TableHead>
+                <TableHead className="min-w-[200px]">Отдел</TableHead>
+                <TableHead className="text-right min-w-[80px]">A</TableHead>
+                <TableHead className="text-right min-w-[80px]">B</TableHead>
+                <TableHead className="text-right min-w-[80px]">Δ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -122,10 +130,10 @@ export function DealComparison({ comparison, file1Name, file2Name }: DealCompari
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ответственный</TableHead>
-                <TableHead className="text-right">A</TableHead>
-                <TableHead className="text-right">B</TableHead>
-                <TableHead className="text-right">Δ</TableHead>
+                <TableHead className="min-w-[200px]">Ответственный</TableHead>
+                <TableHead className="text-right min-w-[80px]">A</TableHead>
+                <TableHead className="text-right min-w-[80px]">B</TableHead>
+                <TableHead className="text-right min-w-[80px]">Δ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
