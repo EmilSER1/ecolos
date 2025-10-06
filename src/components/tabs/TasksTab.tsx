@@ -16,9 +16,9 @@ export function TasksTab({ tasks }: TasksTabProps) {
   const [toCreated, setToCreated] = useState("");
   const [fromClosed, setFromClosed] = useState("");
   const [toClosed, setToClosed] = useState("");
-  const [selectedCreator, setSelectedCreator] = useState("");
-  const [selectedAssignee, setSelectedAssignee] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedCreator, setSelectedCreator] = useState("all");
+  const [selectedAssignee, setSelectedAssignee] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
 
   const parseDate = (s: string): Date | null => {
     if (!s) return null;
@@ -79,28 +79,28 @@ export function TasksTab({ tasks }: TasksTabProps) {
       }
 
       // Фильтр по постановщику
-      if (selectedCreator && (t.Постановщик || "") !== selectedCreator) return false;
+      if (selectedCreator && selectedCreator !== "all" && (t.Постановщик || "") !== selectedCreator) return false;
       
       // Фильтр по исполнителю
-      if (selectedAssignee && (t.Исполнитель || "") !== selectedAssignee) return false;
+      if (selectedAssignee && selectedAssignee !== "all" && (t.Исполнитель || "") !== selectedAssignee) return false;
       
       // Фильтр по статусу
-      if (selectedStatus && (t.Статус || "") !== selectedStatus) return false;
+      if (selectedStatus && selectedStatus !== "all" && (t.Статус || "") !== selectedStatus) return false;
 
       return true;
     });
   }, [uniqueTasks, fromCreated, toCreated, fromClosed, toClosed, selectedCreator, selectedAssignee, selectedStatus]);
 
   const creators = useMemo(() => {
-    return ["", ...new Set(uniqueTasks.map((t) => t.Постановщик || "").filter(Boolean))].sort();
+    return ["all", ...new Set(uniqueTasks.map((t) => t.Постановщик || "").filter(Boolean))].sort();
   }, [uniqueTasks]);
 
   const assignees = useMemo(() => {
-    return ["", ...new Set(uniqueTasks.map((t) => t.Исполнитель || "").filter(Boolean))].sort();
+    return ["all", ...new Set(uniqueTasks.map((t) => t.Исполнитель || "").filter(Boolean))].sort();
   }, [uniqueTasks]);
 
   const statuses = useMemo(() => {
-    return ["", ...new Set(uniqueTasks.map((t) => t.Статус || "").filter(Boolean))].sort();
+    return ["all", ...new Set(uniqueTasks.map((t) => t.Статус || "").filter(Boolean))].sort();
   }, [uniqueTasks]);
 
   // Таблица 1: Сам себе (постановщик = исполнитель)
@@ -235,8 +235,8 @@ export function TasksTab({ tasks }: TasksTabProps) {
               </SelectTrigger>
               <SelectContent>
                 {creators.map((c) => (
-                  <SelectItem key={c || "all"} value={c}>
-                    {c || "Все постановщики"}
+                  <SelectItem key={c} value={c}>
+                    {c === "all" ? "Все постановщики" : c}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -248,8 +248,8 @@ export function TasksTab({ tasks }: TasksTabProps) {
               </SelectTrigger>
               <SelectContent>
                 {assignees.map((a) => (
-                  <SelectItem key={a || "all"} value={a}>
-                    {a || "Все исполнители"}
+                  <SelectItem key={a} value={a}>
+                    {a === "all" ? "Все исполнители" : a}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -261,8 +261,8 @@ export function TasksTab({ tasks }: TasksTabProps) {
               </SelectTrigger>
               <SelectContent>
                 {statuses.map((s) => (
-                  <SelectItem key={s || "all"} value={s}>
-                    {s || "Все статусы"}
+                  <SelectItem key={s} value={s}>
+                    {s === "all" ? "Все статусы" : s}
                   </SelectItem>
                 ))}
               </SelectContent>
