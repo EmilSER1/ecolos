@@ -1,23 +1,68 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { Deal } from "@/types/crm";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
-export function BitrixDealsTab() {
+interface BitrixDealsTabProps {
+  deals: Deal[];
+}
+
+export function BitrixDealsTab({ deals }: BitrixDealsTabProps) {
+  const getStageColor = (stage: string) => {
+    if (stage.includes("Новая")) return "bg-blue-500/10 text-blue-500";
+    if (stage.includes("работе")) return "bg-yellow-500/10 text-yellow-500";
+    if (stage.includes("подписан")) return "bg-green-500/10 text-green-500";
+    if (stage.includes("провалена")) return "bg-red-500/10 text-red-500";
+    return "bg-gray-500/10 text-gray-500";
+  };
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Сделки из Bitrix24</CardTitle>
-          <Button size="sm" variant="outline">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Обновить
-          </Button>
+        <CardHeader>
+          <CardTitle>Сделки из Bitrix24 ({deals.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            Здесь будут отображаться сделки, загруженные из Bitrix24.
-            Настройте вебхук во вкладке "Настройки", чтобы начать загрузку данных.
-          </p>
+          {deals.length === 0 ? (
+            <p className="text-muted-foreground">
+              Здесь будут отображаться сделки, загруженные из Bitrix24.
+              Перейдите во вкладку "Настройки" и нажмите "Загрузить сделки".
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Ответственный</TableHead>
+                    <TableHead>Стадия</TableHead>
+                    <TableHead>Отдел</TableHead>
+                    <TableHead>Дата создания</TableHead>
+                    <TableHead>Дата изменения</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {deals.map((deal, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell className="font-mono text-sm">{deal["ID сделки"]}</TableCell>
+                      <TableCell>{deal.Ответственный}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getStageColor(deal["Стадия сделки"])}>
+                          {deal["Стадия сделки"]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{deal.Отдел}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {deal["Дата создания"] ? new Date(deal["Дата создания"]).toLocaleDateString("ru-RU") : "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {deal["Дата изменения"] ? new Date(deal["Дата изменения"]).toLocaleDateString("ru-RU") : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

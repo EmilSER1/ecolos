@@ -1,7 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, TrendingUp, Users, Calendar } from "lucide-react";
+import { Deal, Task } from "@/types/crm";
+import { useMemo } from "react";
 
-export function BitrixDashboardTab() {
+interface BitrixDashboardTabProps {
+  deals: Deal[];
+  tasks: Task[];
+}
+
+export function BitrixDashboardTab({ deals, tasks }: BitrixDashboardTabProps) {
+  const stats = useMemo(() => {
+    const uniqueManagers = new Set(deals.map(d => d.Ответственный)).size;
+    const activeTasks = tasks.filter(t => t.Статус !== "Завершена").length;
+    const lastSync = deals.length > 0 || tasks.length > 0 
+      ? new Date().toLocaleString("ru-RU") 
+      : null;
+
+    return {
+      totalDeals: deals.length,
+      activeTasks,
+      managers: uniqueManagers,
+      lastSync
+    };
+  }, [deals, tasks]);
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -11,7 +32,7 @@ export function BitrixDashboardTab() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{stats.totalDeals}</div>
             <p className="text-xs text-muted-foreground">Из Bitrix24</p>
           </CardContent>
         </Card>
@@ -22,7 +43,7 @@ export function BitrixDashboardTab() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{stats.activeTasks}</div>
             <p className="text-xs text-muted-foreground">В работе</p>
           </CardContent>
         </Card>
@@ -33,7 +54,7 @@ export function BitrixDashboardTab() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{stats.managers}</div>
             <p className="text-xs text-muted-foreground">Всего пользователей</p>
           </CardContent>
         </Card>
@@ -44,8 +65,8 @@ export function BitrixDashboardTab() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">—</div>
-            <p className="text-xs text-muted-foreground">Данные не загружены</p>
+            <div className="text-2xl font-bold">{stats.lastSync ? stats.lastSync.split(',')[0] : "—"}</div>
+            <p className="text-xs text-muted-foreground">{stats.lastSync ? stats.lastSync.split(',')[1] : "Данные не загружены"}</p>
           </CardContent>
         </Card>
       </div>

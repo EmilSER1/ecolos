@@ -3,13 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, TestTube } from "lucide-react";
+import { Save, TestTube, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export function BitrixSettingsTab() {
+interface BitrixSettingsTabProps {
+  onFetchDeals: (webhookUrl: string) => Promise<{ success: boolean; count: number }>;
+  onFetchTasks: (webhookUrl: string) => Promise<{ success: boolean; count: number }>;
+}
+
+export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettingsTabProps) {
   const { toast } = useToast();
   const [webhookUrl, setWebhookUrl] = useState("https://ecoloskz.bitrix24.kz/rest/31/0lku6mw8kh5wuvyq/");
   const [testing, setTesting] = useState(false);
+  const [fetching, setFetching] = useState(false);
 
   const handleSave = () => {
     toast({
@@ -21,7 +27,6 @@ export function BitrixSettingsTab() {
   const handleTest = async () => {
     setTesting(true);
     try {
-      // Тестовый запрос к Bitrix24
       const response = await fetch(`${webhookUrl}crm.deal.list.json?FILTER[>ID]=0&SELECT[]=ID&SELECT[]=TITLE`);
       const data = await response.json();
       
@@ -41,6 +46,24 @@ export function BitrixSettingsTab() {
       });
     } finally {
       setTesting(false);
+    }
+  };
+
+  const handleFetchDeals = async () => {
+    setFetching(true);
+    try {
+      await onFetchDeals(webhookUrl);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const handleFetchTasks = async () => {
+    setFetching(true);
+    try {
+      await onFetchTasks(webhookUrl);
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -68,7 +91,7 @@ export function BitrixSettingsTab() {
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button onClick={handleSave} className="bg-gradient-to-br from-orange-500 to-red-400">
               <Save className="mr-2 h-4 w-4" />
               Сохранить
@@ -76,6 +99,14 @@ export function BitrixSettingsTab() {
             <Button onClick={handleTest} variant="outline" disabled={testing}>
               <TestTube className="mr-2 h-4 w-4" />
               {testing ? "Тестирование..." : "Проверить подключение"}
+            </Button>
+            <Button onClick={handleFetchDeals} variant="outline" disabled={fetching}>
+              <Download className="mr-2 h-4 w-4" />
+              {fetching ? "Загрузка..." : "Загрузить сделки"}
+            </Button>
+            <Button onClick={handleFetchTasks} variant="outline" disabled={fetching}>
+              <Download className="mr-2 h-4 w-4" />
+              {fetching ? "Загрузка..." : "Загрузить задачи"}
             </Button>
           </div>
         </CardContent>
