@@ -336,10 +336,9 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
                     data={deptsData.slice(0, 5)}
                     cx="50%"
                     cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  style={{ fill: 'hsl(var(--foreground))' }}
+                    labelLine={true}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
                     fill="hsl(var(--primary))"
                     dataKey="value"
                   >
@@ -347,13 +346,13 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      color: "hsl(var(--foreground))",
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -463,24 +462,40 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <Card>
                 <CardHeader>
                   <CardTitle>Задачи по статусам</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
                         data={taskStats.statusData}
                         cx="50%"
                         cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        labelLine={true}
+                        label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                          const RADIAN = Math.PI / 180;
+                          const radius = outerRadius + 25;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                          return (
+                            <text 
+                              x={x} 
+                              y={y} 
+                              fill="hsl(var(--foreground))" 
+                              textAnchor={x > cx ? 'start' : 'end'} 
+                              dominantBaseline="central"
+                              className="text-xs"
+                            >
+                              {`${(percent * 100).toFixed(0)}%`}
+                            </text>
+                          );
+                        }}
                         outerRadius={80}
                         fill="hsl(var(--primary))"
                         dataKey="value"
-                        style={{ fill: 'hsl(var(--foreground))' }}
                       >
                         {taskStats.statusData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -495,6 +510,20 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
                       />
                     </PieChart>
                   </ResponsiveContainer>
+                  <div className="mt-4 space-y-2">
+                    {taskStats.statusData.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                          />
+                          <span>{item.name}</span>
+                        </div>
+                        <span className="font-semibold">{fmt(item.value)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
 
@@ -503,11 +532,11 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
                   <CardTitle>Топ-10 исполнителей</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={taskStats.executorData}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={taskStats.executorData} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                      <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" width={120} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--card))",
@@ -526,11 +555,11 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
                   <CardTitle>Топ-10 постановщиков</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={taskStats.creatorData}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={taskStats.creatorData} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                      <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" width={120} />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "hsl(var(--card))",
