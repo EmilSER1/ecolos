@@ -23,9 +23,21 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
 
   const parseDate = (v: string | null): Date | null => {
     if (!v) return null;
-    const s = String(v);
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    const s = String(v).trim();
+    
+    // Формат YYYY-MM-DD или YYYY-MM-DD HH:MM:SS
+    const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m1) return new Date(+m1[1], +m1[2] - 1, +m1[3]);
+    
+    // Формат DD.MM.YYYY или DD.MM.YYYY HH:MM:SS
+    const m2 = s.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+    if (m2) return new Date(+m2[3], +m2[2] - 1, +m2[1]);
+    
+    // Формат DD/MM/YYYY
+    const m3 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (m3) return new Date(+m3[3], +m3[2] - 1, +m3[1]);
+    
+    // Попытка стандартного парсинга
     const ts = Date.parse(s);
     return isNaN(ts) ? null : new Date(ts);
   };
@@ -53,7 +65,7 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
     
     return tasks.filter((task) => {
       const taskDate = parseDate(task["Дата создания"]);
-      if (!taskDate) return true;
+      if (!taskDate) return false; // Исключаем задачи без даты при фильтрации
       
       if (startDate && taskDate < startDate) return false;
       if (endDate) {
