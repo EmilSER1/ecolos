@@ -366,16 +366,16 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={personsData.slice(0, 5)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
-                <Bar dataKey="value" fill="hsl(var(--primary))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" style={{ fill: 'hsl(var(--foreground))' }} />
+                  <YAxis stroke="hsl(var(--foreground))" style={{ fill: 'hsl(var(--foreground))' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      color: "hsl(var(--foreground))",
+                    }}
+                  />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -391,16 +391,16 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={monthsData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
-                <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} />
+                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" style={{ fill: 'hsl(var(--foreground))' }} />
+                  <YAxis stroke="hsl(var(--foreground))" style={{ fill: 'hsl(var(--foreground))' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      color: "hsl(var(--foreground))",
+                    }}
+                  />
+                  <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -414,17 +414,17 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={stagesData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" width={120} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
-                <Bar dataKey="value" fill="hsl(var(--primary))" />
-              </BarChart>
+                  <XAxis type="number" stroke="hsl(var(--foreground))" style={{ fill: 'hsl(var(--foreground))' }} />
+                  <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" width={120} style={{ fill: 'hsl(var(--foreground))' }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      color: "hsl(var(--foreground))",
+                    }}
+                  />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" />
+                </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
@@ -532,21 +532,21 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
                   <CardTitle>Топ-10 исполнителей</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={taskStats.executorData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" width={120} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          color: "hsl(var(--foreground))",
-                        }}
-                      />
-                      <Bar dataKey="value" fill="hsl(var(--chart-2))" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={taskStats.executorData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" stroke="hsl(var(--foreground))" style={{ fill: 'hsl(var(--foreground))' }} />
+                    <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" width={120} style={{ fill: 'hsl(var(--foreground))' }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        color: "hsl(var(--foreground))",
+                      }}
+                    />
+                    <Bar dataKey="value" fill="#60a5fa" />
+                  </BarChart>
+                </ResponsiveContainer>
                 </CardContent>
               </Card>
 
@@ -555,21 +555,21 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
                   <CardTitle>Топ-10 постановщиков</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={taskStats.creatorData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" width={120} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          color: "hsl(var(--foreground))",
-                        }}
-                      />
-                      <Bar dataKey="value" fill="hsl(var(--chart-3))" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={taskStats.creatorData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" stroke="hsl(var(--foreground))" style={{ fill: 'hsl(var(--foreground))' }} />
+                    <YAxis dataKey="name" type="category" stroke="hsl(var(--foreground))" width={120} style={{ fill: 'hsl(var(--foreground))' }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        color: "hsl(var(--foreground))",
+                      }}
+                    />
+                    <Bar dataKey="value" fill="#60a5fa" />
+                  </BarChart>
+                </ResponsiveContainer>
                 </CardContent>
               </Card>
             </div>
