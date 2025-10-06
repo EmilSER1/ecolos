@@ -47,15 +47,29 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        stage: {
+          proj: "hsl(var(--stage-proj))",
+          "proj-fg": "hsl(var(--stage-proj-fg))",
+          tender: "hsl(var(--stage-tender))",
+          "tender-fg": "hsl(var(--stage-tender-fg))",
+          real: "hsl(var(--stage-real))",
+          "real-fg": "hsl(var(--stage-real-fg))",
+        },
+        name: {
+          op: "hsl(var(--name-op))",
+          "op-fg": "hsl(var(--name-op-fg))",
+          mpo: "hsl(var(--name-mpo))",
+          "mpo-fg": "hsl(var(--name-mpo-fg))",
+          tender: "hsl(var(--name-tender))",
+          "tender-fg": "hsl(var(--name-tender-fg))",
         },
       },
       borderRadius: {
