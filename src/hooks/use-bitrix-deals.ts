@@ -45,30 +45,38 @@ export function useBitrixDeals() {
   useEffect(() => {
     const loadCachedData = () => {
       try {
-        // Загружаем сделки из кеша
-        const cachedDeals = localStorage.getItem(STORAGE_KEYS.CACHED_DEALS);
-        if (cachedDeals) {
-          const dealsData = JSON.parse(cachedDeals);
-          setDeals(dealsData);
-          logger.info(`🔄 Загружены кешированные сделки: ${dealsData.length}`);
+        // Пытаемся загрузить сделки из кеша (если доступен)
+        try {
+          const cachedDeals = localStorage.getItem(STORAGE_KEYS.CACHED_DEALS);
+          if (cachedDeals) {
+            const dealsData = JSON.parse(cachedDeals);
+            setDeals(dealsData);
+            logger.info(`🔄 Загружены кешированные сделки: ${dealsData.length}`);
+          }
+        } catch (dealsError) {
+          logger.warn('⚠️ Не удалось загрузить кешированные сделки:', dealsError);
         }
 
-        // Загружаем задачи из кеша
-        const cachedTasks = localStorage.getItem(STORAGE_KEYS.CACHED_TASKS);
-        if (cachedTasks) {
-          const tasksData = JSON.parse(cachedTasks);
-          setTasks(tasksData);
-          logger.info(`🔄 Загружены кешированные задачи: ${tasksData.length}`);
+        // Пытаемся загрузить задачи из кеша (если доступен)
+        try {
+          const cachedTasks = localStorage.getItem(STORAGE_KEYS.CACHED_TASKS);
+          if (cachedTasks) {
+            const tasksData = JSON.parse(cachedTasks);
+            setTasks(tasksData);
+            logger.info(`🔄 Загружены кешированные задачи: ${tasksData.length}`);
+          }
+        } catch (tasksError) {
+          logger.warn('⚠️ Не удалось загрузить кешированные задачи:', tasksError);
         }
       } catch (error) {
-        logger.error('Ошибка загрузки кешированных данных:', error);
+        logger.error('Общая ошибка загрузки кешированных данных:', error);
       }
     };
 
     // Загружаем данные при инициализации
     loadCachedData();
 
-    // Отслеживаем изменения в localStorage между вкладками/страницами
+    // Отслеживаем изменения в localStorage между вкладками/страницами (если доступен)
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === STORAGE_KEYS.CACHED_DEALS || event.key === STORAGE_KEYS.CACHED_TASKS) {
         logger.info('🔄 Обнаружены изменения данных в другой вкладке, обновляем...');
@@ -76,11 +84,19 @@ export function useBitrixDeals() {
       }
     };
 
-    // Слушаем события изменения localStorage
-    window.addEventListener('storage', handleStorageChange);
+    try {
+      // Слушаем события изменения localStorage (если доступен)
+      window.addEventListener('storage', handleStorageChange);
+    } catch (error) {
+      logger.warn('⚠️ События localStorage недоступны:', error);
+    }
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      try {
+        window.removeEventListener('storage', handleStorageChange);
+      } catch (error) {
+        // Игнорируем ошибки при отписке
+      }
     };
   }, []);
 
@@ -534,9 +550,19 @@ export function useBitrixDeals() {
       logger.info('💾 Сохранение сделок в Supabase...');
       const supabaseResult = await saveDealsToSupabase(bitrixDeals as any);
       
-      // 2. Сохраняем в localStorage для быстрого доступа
-      localStorage.setItem(STORAGE_KEYS.CACHED_DEALS, JSON.stringify(bitrixDeals));
-      localStorage.setItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP, Date.now().toString());
+      // 2. Сохраняем в localStorage для быстрого доступа (только если данные не слишком большие)
+      try {
+        const dealsJson = JSON.stringify(bitrixDeals);
+        if (dealsJson.length < 4 * 1024 * 1024) { // Менее 4MB
+          localStorage.setItem(STORAGE_KEYS.CACHED_DEALS, dealsJson);
+          localStorage.setItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP, Date.now().toString());
+          logger.info(`💾 Сделки сохранены в localStorage (${(dealsJson.length / 1024).toFixed(1)} KB)`);
+        } else {
+          logger.warn(`⚠️ Данные сделок слишком большие для localStorage (${(dealsJson.length / 1024 / 1024).toFixed(1)} MB), пропускаем`);
+        }
+      } catch (error) {
+        logger.warn('⚠️ Не удалось сохранить сделки в localStorage:', error);
+      }
 
       // 3. Создаем почасовой снимок (для тестирования)
       try {
@@ -733,9 +759,19 @@ export function useBitrixDeals() {
       logger.info('💾 Сохранение задач в Supabase...');
       const supabaseResult = await saveTasksToSupabase(bitrixTasks);
 
-      // 2. Сохраняем в localStorage для быстрого доступа
-      localStorage.setItem(STORAGE_KEYS.CACHED_TASKS, JSON.stringify(bitrixTasks));
-      localStorage.setItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP, Date.now().toString());
+      // 2. Сохраняем в localStorage для быстрого доступа (только если данные не слишком большие)
+      try {
+        const tasksJson = JSON.stringify(bitrixTasks);
+        if (tasksJson.length < 4 * 1024 * 1024) { // Менее 4MB
+          localStorage.setItem(STORAGE_KEYS.CACHED_TASKS, tasksJson);
+          localStorage.setItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP, Date.now().toString());
+          logger.info(`💾 Задачи сохранены в localStorage (${(tasksJson.length / 1024).toFixed(1)} KB)`);
+        } else {
+          logger.warn(`⚠️ Данные задач слишком большие для localStorage (${(tasksJson.length / 1024 / 1024).toFixed(1)} MB), пропускаем`);
+        }
+      } catch (error) {
+        logger.warn('⚠️ Не удалось сохранить задачи в localStorage:', error);
+      }
 
       // 3. Создаем почасовой снимок (для тестирования)
       try {
@@ -809,10 +845,17 @@ export function useBitrixDeals() {
       }
     },
     clearCache: () => {
-      localStorage.removeItem(STORAGE_KEYS.CACHED_DEALS);
-      localStorage.removeItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP);
-      localStorage.removeItem(STORAGE_KEYS.CACHED_TASKS);
-      localStorage.removeItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP);
+      try {
+        localStorage.removeItem(STORAGE_KEYS.CACHED_DEALS);
+        localStorage.removeItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP);
+        localStorage.removeItem(STORAGE_KEYS.CACHED_TASKS);
+        localStorage.removeItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP);
+        logger.info('🗑️ LocalStorage кеш очищен');
+      } catch (error) {
+        logger.warn('⚠️ Ошибка очистки localStorage:', error);
+      }
+      
+      // Очищаем состояние в любом случае
       setDeals([]);
       setTasks([]);
       logger.info('🗑️ Кеш данных очищен');

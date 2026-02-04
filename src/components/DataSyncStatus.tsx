@@ -24,16 +24,34 @@ export function DataSyncStatus({ onRefresh, onClearCache, snapshotStats }: DataS
   const updateSyncStatus = () => {
     try {
       // Получаем информацию из пропсов (переданную из useSupabaseData)
-      const dealsData = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_DEALS) || '[]');
-      const tasksData = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_TASKS) || '[]');
-      const dealsTimestamp = localStorage.getItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP);
-      const tasksTimestamp = localStorage.getItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP);
+      let dealsData = [];
+      let tasksData = [];
+      let dealsTimestamp = null;
+      let tasksTimestamp = null;
+
+      // Пытаемся загрузить из localStorage, но не критично если не получается
+      try {
+        const cachedDeals = localStorage.getItem(STORAGE_KEYS.CACHED_DEALS);
+        const cachedTasks = localStorage.getItem(STORAGE_KEYS.CACHED_TASKS);
+        
+        if (cachedDeals) dealsData = JSON.parse(cachedDeals);
+        if (cachedTasks) tasksData = JSON.parse(cachedTasks);
+        
+        const dealsTs = localStorage.getItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP);
+        const tasksTs = localStorage.getItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP);
+        
+        if (dealsTs) dealsTimestamp = new Date(parseInt(dealsTs));
+        if (tasksTs) tasksTimestamp = new Date(parseInt(tasksTs));
+      } catch (localStorageError) {
+        // localStorage может быть недоступен или поврежден - это не критично
+        console.warn('LocalStorage недоступен, используем только данные из Supabase');
+      }
 
       setSyncStatus({
         dealsCount: Array.isArray(dealsData) ? dealsData.length : 0,
         tasksCount: Array.isArray(tasksData) ? tasksData.length : 0,
-        dealsLastUpdate: dealsTimestamp ? new Date(parseInt(dealsTimestamp)) : null,
-        tasksLastUpdate: tasksTimestamp ? new Date(parseInt(tasksTimestamp)) : null,
+        dealsLastUpdate: dealsTimestamp,
+        tasksLastUpdate: tasksTimestamp,
         supabaseConnected: !!snapshotStats,
         lastSnapshot: snapshotStats?.latestSnapshot || null,
       });
