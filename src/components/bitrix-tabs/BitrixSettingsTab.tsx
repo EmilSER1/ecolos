@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, TestTube, Download, Database } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Save, TestTube, Download, Database, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SchemaManager } from "@/components/SchemaManager";
 
 interface BitrixSettingsTabProps {
   onFetchDeals: (webhookUrl: string) => Promise<{ success: boolean; count: number }>;
@@ -151,8 +153,25 @@ export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettings
   };
 
   return (
-    <div className="space-y-4 max-w-2xl">
-      <Card>
+    <div className="space-y-4 max-w-4xl">
+      <Tabs defaultValue="connection" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="connection" className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Подключение
+          </TabsTrigger>
+          <TabsTrigger value="schema" className="flex items-center gap-2">
+            <Settings2 className="w-4 h-4" />
+            Схема данных
+          </TabsTrigger>
+          <TabsTrigger value="automation" className="flex items-center gap-2">
+            <Download className="w-4 h-4" />
+            Автоматизация
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="connection" className="space-y-4">
+          <Card>
         <CardHeader>
           <CardTitle>Настройки Bitrix24</CardTitle>
           <CardDescription>
@@ -219,21 +238,31 @@ export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettings
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Автоматическая синхронизация</CardTitle>
-          <CardDescription>
-            Настройте расписание для автоматической загрузки данных из Bitrix24
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Функционал автоматической синхронизации будет добавлен на следующем этапе.
-            Пока доступна ручная загрузка данных через API.
-          </p>
-        </CardContent>
-      </Card>
+        <TabsContent value="schema" className="space-y-4">
+          <SchemaManager onSchemaUpdate={() => {
+            console.log('Schema updated - refreshing data...');
+          }} />
+        </TabsContent>
+
+        <TabsContent value="automation" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Автоматическая синхронизация</CardTitle>
+              <CardDescription>
+                Настройте расписание для автоматической загрузки данных из Bitrix24
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Функционал автоматической синхронизации будет добавлен на следующем этапе.
+                Пока доступна ручная загрузка данных через API.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Deal, Task } from "@/types/crm";
 import { logger } from "@/lib/logger";
+import { 
+  analyzeDataStructure, 
+  autoAddMissingColumns, 
+  createAnalyticsView,
+  ensureSQLExecutorFunction 
+} from "@/lib/supabase-schema-manager";
 
 // Интерфейсы для работы с Supabase
 interface SupabaseResult<T> {
@@ -16,6 +22,39 @@ interface SupabaseResult<T> {
 export async function saveDealsToSupabase(deals: Deal[]): Promise<SupabaseResult<Deal[]>> {
   try {
     logger.loading(`💾 Сохранение ${deals.length} сделок в Supabase...`);
+
+    // 🧠 УМНЫЙ АНАЛИЗ ДАННЫХ: проверяем новые поля
+    if (deals.length > 0) {
+      logger.info('🔍 Анализируем структуру данных сделок...');
+      const schemaAnalysis = analyzeDataStructure(deals, 'deals');
+      
+      if (schemaAnalysis.newFields.length > 0) {
+        logger.info(`📊 Найдено новых полей: ${schemaAnalysis.newFields.length}`);
+        schemaAnalysis.suggestions.forEach(suggestion => {
+          logger.info(`💡 ${suggestion}`);
+        });
+        
+        // Автоматически добавляем только критически важные поля
+        const priorityFields = ['сумма', 'amount', 'стадия', 'stage', 'ответственный', 'assigned', 'дата', 'date'];
+        const importantFields: Record<string, string> = {};
+        
+        schemaAnalysis.newFields.forEach(field => {
+          const isPriority = priorityFields.some(p => field.toLowerCase().includes(p));
+          if (isPriority) {
+            importantFields[field] = schemaAnalysis.fieldTypes[field];
+          }
+        });
+        
+        if (Object.keys(importantFields).length > 0) {
+          logger.info('🚀 Автоматически добавляем важные поля...');
+          const addResult = await autoAddMissingColumns('deals', importantFields, { dryRun: false });
+          
+          if (addResult.success && addResult.added.length > 0) {
+            logger.success(`✅ Автоматически добавлено полей: ${addResult.added.join(', ')}`);
+          }
+        }
+      }
+    }
 
     // Преобразуем данные для Supabase
     const dealsForSupabase = deals.map(deal => ({
@@ -72,6 +111,39 @@ export async function saveDealsToSupabase(deals: Deal[]): Promise<SupabaseResult
 export async function saveTasksToSupabase(tasks: Task[]): Promise<SupabaseResult<Task[]>> {
   try {
     logger.loading(`💾 Сохранение ${tasks.length} задач в Supabase...`);
+
+    // 🧠 УМНЫЙ АНАЛИЗ ДАННЫХ: проверяем новые поля для задач
+    if (tasks.length > 0) {
+      logger.info('🔍 Анализируем структуру данных задач...');
+      const schemaAnalysis = analyzeDataStructure(tasks, 'tasks');
+      
+      if (schemaAnalysis.newFields.length > 0) {
+        logger.info(`📊 Найдено новых полей в задачах: ${schemaAnalysis.newFields.length}`);
+        schemaAnalysis.suggestions.forEach(suggestion => {
+          logger.info(`💡 ${suggestion}`);
+        });
+        
+        // Автоматически добавляем важные поля для задач
+        const priorityFields = ['статус', 'status', 'приоритет', 'priority', 'исполнитель', 'responsible', 'группа', 'group', 'проект', 'project'];
+        const importantFields: Record<string, string> = {};
+        
+        schemaAnalysis.newFields.forEach(field => {
+          const isPriority = priorityFields.some(p => field.toLowerCase().includes(p));
+          if (isPriority) {
+            importantFields[field] = schemaAnalysis.fieldTypes[field];
+          }
+        });
+        
+        if (Object.keys(importantFields).length > 0) {
+          logger.info('🚀 Автоматически добавляем важные поля для задач...');
+          const addResult = await autoAddMissingColumns('tasks', importantFields, { dryRun: false });
+          
+          if (addResult.success && addResult.added.length > 0) {
+            logger.success(`✅ Автоматически добавлено полей в tasks: ${addResult.added.join(', ')}`);
+          }
+        }
+      }
+    }
 
     // Преобразуем данные для Supabase
     const tasksForSupabase = tasks.map(task => ({
