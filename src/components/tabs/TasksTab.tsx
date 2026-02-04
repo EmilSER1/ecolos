@@ -180,7 +180,7 @@ export function TasksTab({ tasks }: TasksTabProps) {
       <div className="flex min-h-[300px] items-center justify-center">
         <div className="text-center">
           <p className="text-lg text-muted-foreground">Нет данных по задачам</p>
-          <p className="text-sm text-muted-foreground">Импортируйте CSV задачи</p>
+          <p className="text-sm text-muted-foreground">Нажмите "Загрузить данные" вверху для получения актуальных данных из Bitrix24.</p>
         </div>
       </div>
     );

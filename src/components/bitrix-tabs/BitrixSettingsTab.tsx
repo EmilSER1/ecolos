@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,11 +13,38 @@ interface BitrixSettingsTabProps {
 
 export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettingsTabProps) {
   const { toast } = useToast();
-  const [webhookUrl, setWebhookUrl] = useState("https://ecoloskz.bitrix24.kz/rest/31/0lku6mw8kh5wuvyq/");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [testing, setTesting] = useState(false);
   const [fetching, setFetching] = useState(false);
 
+  // Загружаем сохраненный URL при монтировании компонента
+  useEffect(() => {
+    const savedUrl = localStorage.getItem('bitrix_webhook_url');
+    if (savedUrl) {
+      setWebhookUrl(savedUrl);
+      console.log('🔄 Загружен сохраненный webhook URL:', savedUrl);
+    } else {
+      // Устанавливаем URL по умолчанию и сразу сохраняем
+      const defaultUrl = "https://ecoloskz.bitrix24.kz/rest/31/0lku6mw8kh5wuvyq/";
+      setWebhookUrl(defaultUrl);
+      localStorage.setItem('bitrix_webhook_url', defaultUrl);
+      console.log('🆕 Установлен webhook URL по умолчанию:', defaultUrl);
+    }
+  }, []);
+
   const handleSave = () => {
+    if (!webhookUrl.trim()) {
+      toast({
+        title: "Ошибка",
+        description: "Введите корректный Webhook URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    localStorage.setItem('bitrix_webhook_url', webhookUrl.trim());
+    console.log('💾 Webhook URL сохранен:', webhookUrl.trim());
+    
     toast({
       title: "Настройки сохранены",
       description: "Webhook URL успешно сохранен",

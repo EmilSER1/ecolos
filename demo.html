@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Dashboard Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold text-gray-900">CRM Dashboard</h1>
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Импорт сделок
+                        </button>
+                        <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            Импорт задач
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <nav class="mt-4">
+                    <div class="flex space-x-8">
+                        <a href="#" class="border-b-2 border-blue-600 text-blue-600 py-2 px-1">Дашборд</a>
+                        <a href="#" class="text-gray-500 hover:text-gray-700 py-2 px-1">Несовпадения</a>
+                        <a href="#" class="text-gray-500 hover:text-gray-700 py-2 px-1">Устаревшие</a>
+                        <a href="#" class="text-gray-500 hover:text-gray-700 py-2 px-1">Задачи</a>
+                        <a href="#" class="text-gray-500 hover:text-gray-700 py-2 px-1">Сравнение</a>
+                        <a href="#" class="text-gray-500 hover:text-gray-700 py-2 px-1">Файлы</a>
+                    </div>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <i data-lucide="briefcase" class="w-6 h-6 text-blue-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Всего сделок</h3>
+                            <p class="text-2xl font-semibold text-gray-900">1,247</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-green-100 rounded-lg">
+                            <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">Завершено</h3>
+                            <p class="text-2xl font-semibold text-gray-900">842</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <div class="flex items-center">
+                        <div class="p-2 bg-orange-100 rounded-lg">
+                            <i data-lucide="clock" class="w-6 h-6 text-orange-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium text-gray-500">В процессе</h3>
+                            <p class="text-2xl font-semibold text-gray-900">405</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Последние сделки</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Название</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Сумма</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Сделка #1001</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Закрыта
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₽150,000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">22.01.2026</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Сделка #1002</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            В работе
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₽89,500</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">21.01.2026</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Сделка #1003</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            Новая
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₽320,000</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">20.01.2026</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notice -->
+            <div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex">
+                    <i data-lucide="info" class="w-5 h-5 text-yellow-600 mt-0.5"></i>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">Демо версия</h3>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Это статическая демонстрация интерфейса. Для полной функциональности установите Node.js и запустите <code>npm run dev</code>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -6,6 +6,7 @@ import { Trash2, Loader2 } from "lucide-react";
 import { loadDealFilesFromCloud, loadTaskFilesFromCloud, deleteDealFile, deleteTaskFile } from "@/lib/cloud-storage";
 import { toast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { SnapshotManager } from "@/components/SnapshotManager";
 
 export function FilesTab() {
   const [dealFiles, setDealFiles] = useState<any[]>([]);
@@ -90,10 +91,13 @@ export function FilesTab() {
 
   return (
     <div className="space-y-6">
+      {/* Управление снимками данных */}
+      <SnapshotManager />
+
       {/* Файлы сделок */}
       <Card>
         <CardHeader>
-          <CardTitle>Файлы сделок ({dealFiles.length})</CardTitle>
+          <CardTitle>Файлы сделок ({dealFiles.length}) - Устарело</CardTitle>
         </CardHeader>
         <CardContent>
           {dealFiles.length === 0 ? (
@@ -134,7 +138,7 @@ export function FilesTab() {
       {/* Файлы задач */}
       <Card>
         <CardHeader>
-          <CardTitle>Файлы задач ({taskFiles.length})</CardTitle>
+          <CardTitle>Файлы задач ({taskFiles.length}) - Устарело</CardTitle>
         </CardHeader>
         <CardContent>
           {taskFiles.length === 0 ? (
