@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Deal, Task } from "@/types/crm";
 import { normalizeDeals } from "@/lib/normalizers";
 import { toast } from "@/hooks/use-toast";
@@ -39,6 +39,49 @@ export function useBitrixDeals() {
   const [loading, setLoading] = useState(false);
   const [fieldMetadata, setFieldMetadata] = useState<FieldMetadata>({});
   const [stageMetadata, setStageMetadata] = useState<StageMetadata>({});
+
+  // Загружаем кешированные данные при инициализации и отслеживаем изменения
+  useEffect(() => {
+    const loadCachedData = () => {
+      try {
+        // Загружаем сделки из кеша
+        const cachedDeals = localStorage.getItem(STORAGE_KEYS.CACHED_DEALS);
+        if (cachedDeals) {
+          const dealsData = JSON.parse(cachedDeals);
+          setDeals(dealsData);
+          logger.info(`🔄 Загружены кешированные сделки: ${dealsData.length}`);
+        }
+
+        // Загружаем задачи из кеша
+        const cachedTasks = localStorage.getItem(STORAGE_KEYS.CACHED_TASKS);
+        if (cachedTasks) {
+          const tasksData = JSON.parse(cachedTasks);
+          setTasks(tasksData);
+          logger.info(`🔄 Загружены кешированные задачи: ${tasksData.length}`);
+        }
+      } catch (error) {
+        logger.error('Ошибка загрузки кешированных данных:', error);
+      }
+    };
+
+    // Загружаем данные при инициализации
+    loadCachedData();
+
+    // Отслеживаем изменения в localStorage между вкладками/страницами
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEYS.CACHED_DEALS || event.key === STORAGE_KEYS.CACHED_TASKS) {
+        logger.info('🔄 Обнаружены изменения данных в другой вкладке, обновляем...');
+        loadCachedData();
+      }
+    };
+
+    // Слушаем события изменения localStorage
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const fetchDealsFromBitrix = async (webhookUrl: string) => {
     setLoading(true);
@@ -486,6 +529,10 @@ export function useBitrixDeals() {
       // Для Bitrix24 данные уже нормализованы
       setDeals(bitrixDeals as any);
 
+      // Сохраняем данные в localStorage для синхронизации между страницами
+      localStorage.setItem(STORAGE_KEYS.CACHED_DEALS, JSON.stringify(bitrixDeals));
+      localStorage.setItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP, Date.now().toString());
+
       // Создаем снимок данных для текущей недели
       const weekRange = getWeekRange();
       logger.snapshot(LOG_MESSAGES.CREATING_SNAPSHOT(weekRange.label, 'сделок'));
@@ -664,6 +711,10 @@ export function useBitrixDeals() {
 
       setTasks(bitrixTasks);
 
+      // Сохраняем данные в localStorage для синхронизации между страницами
+      localStorage.setItem(STORAGE_KEYS.CACHED_TASKS, JSON.stringify(bitrixTasks));
+      localStorage.setItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP, Date.now().toString());
+
       // Создаем снимок задач для текущей недели
       const weekRange = getWeekRange();
       logger.snapshot(LOG_MESSAGES.CREATING_SNAPSHOT(weekRange.label, 'задач'));
@@ -721,6 +772,15 @@ export function useBitrixDeals() {
           fetchTasksFromBitrix(webhookUrl)
         ]);
       }
+    },
+    clearCache: () => {
+      localStorage.removeItem(STORAGE_KEYS.CACHED_DEALS);
+      localStorage.removeItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP);
+      localStorage.removeItem(STORAGE_KEYS.CACHED_TASKS);
+      localStorage.removeItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP);
+      setDeals([]);
+      setTasks([]);
+      logger.info('🗑️ Кеш данных очищен');
     }
   };
 }

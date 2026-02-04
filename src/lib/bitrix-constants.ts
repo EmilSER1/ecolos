@@ -109,4 +109,8 @@ export const MAX_TASK_DESCRIPTION_LENGTH = 100;
  */
 export const STORAGE_KEYS = {
   BITRIX_WEBHOOK_URL: 'bitrix_webhook_url',
+  CACHED_DEALS: 'bitrix_cached_deals',
+  CACHED_DEALS_TIMESTAMP: 'bitrix_cached_deals_timestamp',
+  CACHED_TASKS: 'bitrix_cached_tasks',
+  CACHED_TASKS_TIMESTAMP: 'bitrix_cached_tasks_timestamp',
 } as const;

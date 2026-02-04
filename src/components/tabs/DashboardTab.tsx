@@ -4,6 +4,7 @@ import { StatsCards } from "@/components/dashboard/StatsCards";
 import { FilterControls } from "@/components/dashboard/FilterControls";
 import { DealsChartsSection } from "@/components/dashboard/DealsChartsSection";
 import { TasksSection } from "@/components/dashboard/TasksSection";
+import { DataSyncStatus } from "@/components/DataSyncStatus";
 import { UI_TEXTS } from "@/lib/messages";
 import {
   filterDealsByDate,
@@ -20,12 +21,13 @@ import {
 interface DashboardTabProps {
   deals: Deal[];
   tasks: Task[];
+  onClearCache?: () => void;
 }
 
 /**
  * Главный компонент дашборда с аналитикой сделок и задач
  */
-export function DashboardTab({ deals, tasks }: DashboardTabProps) {
+export function DashboardTab({ deals, tasks, onClearCache }: DashboardTabProps) {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
@@ -58,10 +60,13 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
 
   if (deals.length === 0) {
     return (
-      <div className="flex min-h-[300px] items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-muted-foreground">{UI_TEXTS.DASHBOARD.NO_DATA_TITLE}</p>
-          <p className="text-sm text-muted-foreground">{UI_TEXTS.DASHBOARD.NO_DATA_DESCRIPTION}</p>
+      <div className="space-y-6">
+        <DataSyncStatus onClearCache={onClearCache} />
+        <div className="flex min-h-[300px] items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg text-muted-foreground">{UI_TEXTS.DASHBOARD.NO_DATA_TITLE}</p>
+            <p className="text-sm text-muted-foreground">{UI_TEXTS.DASHBOARD.NO_DATA_DESCRIPTION}</p>
+          </div>
         </div>
       </div>
     );
@@ -69,6 +74,8 @@ export function DashboardTab({ deals, tasks }: DashboardTabProps) {
 
   return (
     <div className="space-y-4">
+      <DataSyncStatus onClearCache={onClearCache} />
+      
       <FilterControls
         startDate={startDate}
         endDate={endDate}

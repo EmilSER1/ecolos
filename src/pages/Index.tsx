@@ -21,7 +21,8 @@ const Index = () => {
     tasks, 
     loading, 
     fetchDealsFromBitrix,
-    fetchTasksFromBitrix 
+    fetchTasksFromBitrix,
+    clearCache
   } = useBitrixDeals();
 
   const handleLoadData = async () => {
@@ -114,7 +115,7 @@ const Index = () => {
 
       <main className="container mx-auto p-6 animate-slide-in">
         <div className="rounded-2xl bg-white/60 backdrop-blur-sm border border-white/20 shadow-elegant p-6">
-          {activeTab === "dashboard" && <DashboardTab deals={deals} tasks={tasks} />}
+          {activeTab === "dashboard" && <DashboardTab deals={deals} tasks={tasks} onClearCache={clearCache} />}
           {activeTab === "mismatch" && <MismatchTab deals={deals} />}
           {activeTab === "stale" && <StaleTab deals={deals} />}
           {activeTab === "tasks" && <TasksTab tasks={tasks} />}
