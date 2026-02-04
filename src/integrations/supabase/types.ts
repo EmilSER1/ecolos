@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      data_snapshots: {
+        Row: {
+          id: string
+          created_at: string | null
+          week_start: string
+          week_end: string
+          deals_count: number | null
+          tasks_count: number | null
+          deals_data: Json | null
+          tasks_data: Json | null
+          metadata: Json | null
+          import_timestamp: string | null
+          deals_imported: number | null
+          tasks_imported: number | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string | null
+          week_start: string
+          week_end: string
+          deals_count?: number | null
+          tasks_count?: number | null
+          deals_data?: Json | null
+          tasks_data?: Json | null
+          metadata?: Json | null
+          import_timestamp?: string | null
+          deals_imported?: number | null
+          tasks_imported?: number | null
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          week_start?: string
+          week_end?: string
+          deals_count?: number | null
+          tasks_count?: number | null
+          deals_data?: Json | null
+          tasks_data?: Json | null
+          metadata?: Json | null
+          import_timestamp?: string | null
+          deals_imported?: number | null
+          tasks_imported?: number | null
+        }
+        Relationships: []
+      }
       deal_files: {
         Row: {
           file_data: Json
@@ -38,6 +83,90 @@ export type Database = {
         }
         Relationships: []
       }
+      deals: {
+        Row: {
+          id: number
+          bitrix_id: string
+          title: string | null
+          stage_id: string | null
+          stage_name: string | null
+          amount: number | null
+          currency: string | null
+          assigned_by_id: string | null
+          assigned_by_name: string | null
+          contact_id: string | null
+          contact_name: string | null
+          company_id: string | null
+          company_name: string | null
+          date_create: string | null
+          date_modify: string | null
+          date_begin: string | null
+          date_close: string | null
+          department: string | null
+          probability: number | null
+          source_id: string | null
+          type_id: string | null
+          comments: string | null
+          raw_data: Json
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          bitrix_id: string
+          title?: string | null
+          stage_id?: string | null
+          stage_name?: string | null
+          amount?: number | null
+          currency?: string | null
+          assigned_by_id?: string | null
+          assigned_by_name?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          date_create?: string | null
+          date_modify?: string | null
+          date_begin?: string | null
+          date_close?: string | null
+          department?: string | null
+          probability?: number | null
+          source_id?: string | null
+          type_id?: string | null
+          comments?: string | null
+          raw_data?: Json
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          bitrix_id?: string
+          title?: string | null
+          stage_id?: string | null
+          stage_name?: string | null
+          amount?: number | null
+          currency?: string | null
+          assigned_by_id?: string | null
+          assigned_by_name?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          date_create?: string | null
+          date_modify?: string | null
+          date_begin?: string | null
+          date_close?: string | null
+          department?: string | null
+          probability?: number | null
+          source_id?: string | null
+          type_id?: string | null
+          comments?: string | null
+          raw_data?: Json
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       task_files: {
         Row: {
           file_data: Json
@@ -56,6 +185,66 @@ export type Database = {
           file_name?: string
           id?: string
           uploaded_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          id: number
+          bitrix_id: string
+          title: string | null
+          status: string | null
+          status_name: string | null
+          priority: string | null
+          priority_name: string | null
+          created_by: string | null
+          created_by_name: string | null
+          responsible_id: string | null
+          responsible_name: string | null
+          date_create: string | null
+          date_close: string | null
+          description: string | null
+          raw_data: Json
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          bitrix_id: string
+          title?: string | null
+          status?: string | null
+          status_name?: string | null
+          priority?: string | null
+          priority_name?: string | null
+          created_by?: string | null
+          created_by_name?: string | null
+          responsible_id?: string | null
+          responsible_name?: string | null
+          date_create?: string | null
+          date_close?: string | null
+          description?: string | null
+          raw_data?: Json
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          bitrix_id?: string
+          title?: string | null
+          status?: string | null
+          status_name?: string | null
+          priority?: string | null
+          priority_name?: string | null
+          created_by?: string | null
+          created_by_name?: string | null
+          responsible_id?: string | null
+          responsible_name?: string | null
+          date_create?: string | null
+          date_close?: string | null
+          description?: string | null
+          raw_data?: Json
+          created_at?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

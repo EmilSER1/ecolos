@@ -22,12 +22,14 @@ interface DashboardTabProps {
   deals: Deal[];
   tasks: Task[];
   onClearCache?: () => void;
+  onRefresh?: () => void;
+  snapshotStats?: any;
 }
 
 /**
  * Главный компонент дашборда с аналитикой сделок и задач
  */
-export function DashboardTab({ deals, tasks, onClearCache }: DashboardTabProps) {
+export function DashboardTab({ deals, tasks, onClearCache, onRefresh, snapshotStats }: DashboardTabProps) {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
@@ -61,11 +63,15 @@ export function DashboardTab({ deals, tasks, onClearCache }: DashboardTabProps) 
   if (deals.length === 0) {
     return (
       <div className="space-y-6">
-        <DataSyncStatus onClearCache={onClearCache} />
+        <DataSyncStatus 
+          onClearCache={onClearCache} 
+          onRefresh={onRefresh}
+          snapshotStats={snapshotStats}
+        />
         <div className="flex min-h-[300px] items-center justify-center">
           <div className="text-center">
             <p className="text-lg text-muted-foreground">{UI_TEXTS.DASHBOARD.NO_DATA_TITLE}</p>
-            <p className="text-sm text-muted-foreground">{UI_TEXTS.DASHBOARD.NO_DATA_DESCRIPTION}</p>
+            <p className="text-sm text-muted-foreground">Загрузите данные из Bitrix24 или проверьте подключение к базе данных</p>
           </div>
         </div>
       </div>
@@ -74,7 +80,11 @@ export function DashboardTab({ deals, tasks, onClearCache }: DashboardTabProps) 
 
   return (
     <div className="space-y-4">
-      <DataSyncStatus onClearCache={onClearCache} />
+      <DataSyncStatus 
+        onClearCache={onClearCache} 
+        onRefresh={onRefresh}
+        snapshotStats={snapshotStats}
+      />
       
       <FilterControls
         startDate={startDate}

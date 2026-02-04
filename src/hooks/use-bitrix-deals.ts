@@ -3,6 +3,7 @@ import { Deal, Task } from "@/types/crm";
 import { normalizeDeals } from "@/lib/normalizers";
 import { toast } from "@/hooks/use-toast";
 import { createSnapshot, getWeekRange } from "@/lib/snapshots";
+import { saveDealsToSupabase, saveTasksToSupabase, createHourlySnapshot } from "@/lib/supabase-data";
 import { logger } from "@/lib/logger";
 import { 
   BITRIX_STAGE_MAPPING, 
@@ -529,11 +530,26 @@ export function useBitrixDeals() {
       // Для Bitrix24 данные уже нормализованы
       setDeals(bitrixDeals as any);
 
-      // Сохраняем данные в localStorage для синхронизации между страницами
+      // 1. СОХРАНЯЕМ В SUPABASE (основное хранилище)
+      logger.info('💾 Сохранение сделок в Supabase...');
+      const supabaseResult = await saveDealsToSupabase(bitrixDeals as any);
+      
+      // 2. Сохраняем в localStorage для быстрого доступа
       localStorage.setItem(STORAGE_KEYS.CACHED_DEALS, JSON.stringify(bitrixDeals));
       localStorage.setItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP, Date.now().toString());
 
-      // Создаем снимок данных для текущей недели
+      // 3. Создаем почасовой снимок (для тестирования)
+      try {
+        logger.info('📸 Создание почасового снимка сделок...');
+        const hourlySnapshotResult = await createHourlySnapshot();
+        if (hourlySnapshotResult.success) {
+          logger.success('✅ Почасовой снимок сделок создан');
+        }
+      } catch (error) {
+        logger.warn('⚠️ Не удалось создать почасовой снимок:', error);
+      }
+
+      // 4. Создаем еженедельный снимок (совместимость)
       const weekRange = getWeekRange();
       logger.snapshot(LOG_MESSAGES.CREATING_SNAPSHOT(weekRange.label, 'сделок'));
       
@@ -541,23 +557,25 @@ export function useBitrixDeals() {
         const snapshotResult = await createSnapshot(bitrixDeals as any, [], weekRange);
         if (snapshotResult.success) {
           logger.success(LOG_MESSAGES.SNAPSHOT_CREATED(snapshotResult.snapshot?.id || 'unknown', 'сделок'));
-          toast({
-            title: TOAST_MESSAGES.DEALS.SUCCESS_TITLE,
-            description: TOAST_MESSAGES.DEALS.SUCCESS_DESCRIPTION(bitrixDeals.length),
-          });
         } else {
           logger.warn(LOG_MESSAGES.SNAPSHOT_ERROR(snapshotResult.error || 'unknown', 'сделок'));
-          toast({
-            title: TOAST_MESSAGES.DEALS.SUCCESS_NO_SNAPSHOT_TITLE,
-            description: TOAST_MESSAGES.DEALS.SUCCESS_NO_SNAPSHOT_DESCRIPTION(bitrixDeals.length),
-          });
         }
       } catch (error) {
-        logger.error('Ошибка создания снимка сделок:', error);
-      toast({
+        logger.error('Ошибка создания еженедельного снимка сделок:', error);
+      }
+
+      // 5. Показываем результат пользователю
+      if (supabaseResult.success) {
+        toast({
+          title: "✅ Сделки загружены и сохранены",
+          description: `Загружено ${bitrixDeals.length} сделок из Bitrix24 и сохранено в базу данных`,
+        });
+      } else {
+        toast({
           title: TOAST_MESSAGES.DEALS.SUCCESS_NO_SNAPSHOT_TITLE,
-          description: TOAST_MESSAGES.DEALS.SUCCESS_NO_SNAPSHOT_DESCRIPTION(bitrixDeals.length),
-      });
+          description: `${TOAST_MESSAGES.DEALS.SUCCESS_NO_SNAPSHOT_DESCRIPTION(bitrixDeals.length)}. Предупреждение: ${supabaseResult.error}`,
+          variant: "destructive"
+        });
       }
 
       return { success: true, count: bitrixDeals.length };
@@ -711,11 +729,26 @@ export function useBitrixDeals() {
 
       setTasks(bitrixTasks);
 
-      // Сохраняем данные в localStorage для синхронизации между страницами
+      // 1. СОХРАНЯЕМ В SUPABASE (основное хранилище)
+      logger.info('💾 Сохранение задач в Supabase...');
+      const supabaseResult = await saveTasksToSupabase(bitrixTasks);
+
+      // 2. Сохраняем в localStorage для быстрого доступа
       localStorage.setItem(STORAGE_KEYS.CACHED_TASKS, JSON.stringify(bitrixTasks));
       localStorage.setItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP, Date.now().toString());
 
-      // Создаем снимок задач для текущей недели
+      // 3. Создаем почасовой снимок (для тестирования)
+      try {
+        logger.info('📸 Создание почасового снимка задач...');
+        const hourlySnapshotResult = await createHourlySnapshot();
+        if (hourlySnapshotResult.success) {
+          logger.success('✅ Почасовой снимок задач создан');
+        }
+      } catch (error) {
+        logger.warn('⚠️ Не удалось создать почасовой снимок:', error);
+      }
+
+      // 4. Создаем еженедельный снимок (совместимость)
       const weekRange = getWeekRange();
       logger.snapshot(LOG_MESSAGES.CREATING_SNAPSHOT(weekRange.label, 'задач'));
       
@@ -723,23 +756,25 @@ export function useBitrixDeals() {
         const snapshotResult = await createSnapshot([], bitrixTasks, weekRange);
         if (snapshotResult.success) {
           logger.success(LOG_MESSAGES.SNAPSHOT_CREATED(snapshotResult.snapshot?.id || 'unknown', 'задач'));
-          toast({
-            title: TOAST_MESSAGES.TASKS.SUCCESS_TITLE,
-            description: TOAST_MESSAGES.TASKS.SUCCESS_DESCRIPTION(bitrixTasks.length),
-          });
         } else {
           logger.warn(LOG_MESSAGES.SNAPSHOT_ERROR(snapshotResult.error || 'unknown', 'задач'));
-          toast({
-            title: TOAST_MESSAGES.TASKS.SUCCESS_NO_SNAPSHOT_TITLE,
-            description: TOAST_MESSAGES.TASKS.SUCCESS_NO_SNAPSHOT_DESCRIPTION(bitrixTasks.length),
-          });
         }
       } catch (error) {
-        logger.error('Ошибка создания снимка задач:', error);
-      toast({
+        logger.error('Ошибка создания еженедельного снимка задач:', error);
+      }
+
+      // 5. Показываем результат пользователю
+      if (supabaseResult.success) {
+        toast({
+          title: "✅ Задачи загружены и сохранены",
+          description: `Загружено ${bitrixTasks.length} задач из Bitrix24 и сохранено в базу данных`,
+        });
+      } else {
+        toast({
           title: TOAST_MESSAGES.TASKS.SUCCESS_NO_SNAPSHOT_TITLE,
-          description: TOAST_MESSAGES.TASKS.SUCCESS_NO_SNAPSHOT_DESCRIPTION(bitrixTasks.length),
-      });
+          description: `${TOAST_MESSAGES.TASKS.SUCCESS_NO_SNAPSHOT_DESCRIPTION(bitrixTasks.length)}. Предупреждение: ${supabaseResult.error}`,
+          variant: "destructive"
+        });
       }
 
       return { success: true, count: bitrixTasks.length };

@@ -8,32 +8,34 @@ import { STORAGE_KEYS } from "@/lib/bitrix-constants";
 interface DataSyncStatusProps {
   onRefresh?: () => void;
   onClearCache?: () => void;
+  snapshotStats?: any;
 }
 
-export function DataSyncStatus({ onRefresh, onClearCache }: DataSyncStatusProps) {
+export function DataSyncStatus({ onRefresh, onClearCache, snapshotStats }: DataSyncStatusProps) {
   const [syncStatus, setSyncStatus] = useState({
     dealsCount: 0,
     tasksCount: 0,
     dealsLastUpdate: null as Date | null,
     tasksLastUpdate: null as Date | null,
+    supabaseConnected: false,
+    lastSnapshot: null as any,
   });
 
   const updateSyncStatus = () => {
     try {
-      // Проверяем кешированные данные
-      const cachedDeals = localStorage.getItem(STORAGE_KEYS.CACHED_DEALS);
-      const cachedTasks = localStorage.getItem(STORAGE_KEYS.CACHED_TASKS);
+      // Получаем информацию из пропсов (переданную из useSupabaseData)
+      const dealsData = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_DEALS) || '[]');
+      const tasksData = JSON.parse(localStorage.getItem(STORAGE_KEYS.CACHED_TASKS) || '[]');
       const dealsTimestamp = localStorage.getItem(STORAGE_KEYS.CACHED_DEALS_TIMESTAMP);
       const tasksTimestamp = localStorage.getItem(STORAGE_KEYS.CACHED_TASKS_TIMESTAMP);
-
-      const dealsData = cachedDeals ? JSON.parse(cachedDeals) : [];
-      const tasksData = cachedTasks ? JSON.parse(cachedTasks) : [];
 
       setSyncStatus({
         dealsCount: Array.isArray(dealsData) ? dealsData.length : 0,
         tasksCount: Array.isArray(tasksData) ? tasksData.length : 0,
         dealsLastUpdate: dealsTimestamp ? new Date(parseInt(dealsTimestamp)) : null,
         tasksLastUpdate: tasksTimestamp ? new Date(parseInt(tasksTimestamp)) : null,
+        supabaseConnected: !!snapshotStats,
+        lastSnapshot: snapshotStats?.latestSnapshot || null,
       });
     } catch (error) {
       console.error('Ошибка обновления статуса синхронизации:', error);
@@ -75,7 +77,7 @@ export function DataSyncStatus({ onRefresh, onClearCache }: DataSyncStatusProps)
               Состояние данных
             </CardTitle>
             <CardDescription>
-              Синхронизация между страницами Bitrix24 и Дашборда
+              Данные из Bitrix24 → Supabase → Аналитика (с почасовыми снимками)
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -107,6 +109,23 @@ export function DataSyncStatus({ onRefresh, onClearCache }: DataSyncStatusProps)
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Статус подключения к Supabase */}
+        <div className="p-3 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-medium text-purple-900">База данных Supabase</span>
+            <Badge variant={syncStatus.supabaseConnected ? "default" : "secondary"}>
+              {syncStatus.supabaseConnected ? "Подключена" : "Не подключена"}
+            </Badge>
+          </div>
+          {snapshotStats && (
+            <div className="text-sm text-purple-700">
+              📸 Всего снимков: {snapshotStats.totalSnapshots} | 
+              📊 Среднее сделок: {snapshotStats.averageDeals} | 
+              📋 Средне задач: {snapshotStats.averageTasks}
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           {/* Статус сделок */}
           <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
@@ -157,7 +176,7 @@ export function DataSyncStatus({ onRefresh, onClearCache }: DataSyncStatusProps)
         {syncStatus.dealsCount === 0 && syncStatus.tasksCount === 0 && (
           <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
             <p className="text-sm text-amber-800">
-              💡 Данные не загружены. Перейдите в раздел <strong>Bitrix24 → Настройки</strong> для загрузки данных из Bitrix24.
+              💡 Данные не найдены в базе. Перейдите в раздел <strong>Bitrix24 → Настройки</strong> для загрузки данных из Bitrix24 в Supabase.
             </p>
           </div>
         )}
@@ -165,7 +184,12 @@ export function DataSyncStatus({ onRefresh, onClearCache }: DataSyncStatusProps)
         {(syncStatus.dealsCount > 0 || syncStatus.tasksCount > 0) && (
           <div className="p-3 rounded-lg bg-green-50 border border-green-200">
             <p className="text-sm text-green-800">
-              ✅ Данные синхронизированы между всеми страницами приложения.
+              ✅ Данные загружены в базу Supabase. Почасовые снимки создаются автоматически.
+              {syncStatus.lastSnapshot && (
+                <span className="block mt-1">
+                  📸 Последний снимок: {new Date(syncStatus.lastSnapshot.created_at).toLocaleString('ru-RU')}
+                </span>
+              )}
             </p>
           </div>
         )}
