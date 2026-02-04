@@ -622,6 +622,7 @@ export function useBitrixDeals() {
     setLoading(true);
     try {
       logger.loading(LOG_MESSAGES.LOADING_TASKS);
+      logger.info(`🔗 Загрузка задач с URL: ${webhookUrl}task.item.list.json`);
       
       // Пробуем другой метод - через task.item.list
       let allTasks: any[] = [];
@@ -631,6 +632,8 @@ export function useBitrixDeals() {
 
       while (hasMore) {
         try {
+          logger.info(`📋 Попытка загрузить задачи ${start + 1}-${start + limit}...`);
+          
           // Используем POST-запрос для избежания CORS
           const response = await fetch(`${webhookUrl}task.item.list.json`, {
             method: 'POST',
@@ -644,7 +647,11 @@ export function useBitrixDeals() {
             })
           });
           
+          logger.info(`📋 POST запрос задач: статус ${response.status} ${response.statusText}`);
+          
           if (!response.ok) {
+            logger.warn(`⚠️ POST запрос неудачен, пробуем GET метод...`);
+            
             // Если POST не работает, попробуем старый метод GET
             const getResponse = await fetch(
               `${webhookUrl}task.item.list.json?` +
@@ -653,52 +660,78 @@ export function useBitrixDeals() {
           `SELECT[]=RESPONSIBLE_ID&SELECT[]=CREATED_DATE&SELECT[]=CLOSED_DATE&` +
               `SELECT[]=DESCRIPTION&SELECT[]=PRIORITY`
             );
+            
+            logger.info(`📋 GET запрос задач: статус ${getResponse.status} ${getResponse.statusText}`);
+            
             if (!getResponse.ok) {
-              throw new Error(ERROR_MESSAGES.BITRIX_CONNECTION_ERROR);
+              const errorText = await getResponse.text();
+              logger.error(`❌ GET запрос также неудачен: ${errorText}`);
+              throw new Error(`${ERROR_MESSAGES.BITRIX_CONNECTION_ERROR}: ${getResponse.status} ${errorText}`);
             }
+            
             const data = await getResponse.json();
+            logger.info(`📋 GET ответ получен:`, { hasResult: !!data.result, isArray: Array.isArray(data.result), length: data.result?.length });
             
             if (data.result && Array.isArray(data.result)) {
               allTasks = allTasks.concat(data.result);
-              logger.info(`Загружено задач: ${start + 1}-${start + data.result.length} (всего: ${allTasks.length})`);
+              logger.success(`✅ Загружено задач GET: ${start + 1}-${start + data.result.length} (всего: ${allTasks.length})`);
               
               if (data.result.length < limit) {
                 hasMore = false;
+                logger.info('📋 Достигнут конец списка задач (GET)');
               } else {
                 start += limit;
               }
             } else {
+              logger.warn('⚠️ Неожиданный формат ответа GET для задач:', data);
               hasMore = false;
             }
           } else {
-        const data = await response.json();
-        
+            const data = await response.json();
+            logger.info(`📋 POST ответ получен:`, { hasResult: !!data.result, isArray: Array.isArray(data.result), length: data.result?.length });
+            
             if (data.result && Array.isArray(data.result)) {
               allTasks = allTasks.concat(data.result);
-              logger.info(`Загружено задач: ${start + 1}-${start + data.result.length} (всего: ${allTasks.length})`);
+              logger.success(`✅ Загружено задач POST: ${start + 1}-${start + data.result.length} (всего: ${allTasks.length})`);
               
               if (data.result.length < limit) {
-          hasMore = false;
-        } else {
-          start += limit;
-        }
+                hasMore = false;
+                logger.info('📋 Достигнут конец списка задач (POST)');
+              } else {
+                start += limit;
+              }
             } else {
+              logger.warn('⚠️ Неожиданный формат ответа POST для задач:', data);
               hasMore = false;
             }
           }
-        } catch (error) {
-          logger.error(`Ошибка при загрузке задач ${start}-${start+limit}:`, error);
+        } catch (error: any) {
+          logger.error(`❌ Критическая ошибка при загрузке задач ${start}-${start+limit}:`, error);
+          logger.error(`📋 URL: ${webhookUrl}task.item.list.json`);
+          logger.error(`📋 Параметры: start=${start}, limit=${limit}`);
           hasMore = false;
         }
       }
 
-      logger.success(`Всего загружено задач: ${allTasks.length}`);
+      logger.success(`📊 Итого загружено задач из Bitrix24: ${allTasks.length}`);
       
       if (allTasks.length === 0) {
-        logger.warn(INFO_MESSAGES.NO_TASKS_FOUND);
+        logger.warn('⚠️ ' + INFO_MESSAGES.NO_TASKS_FOUND);
+        logger.info('🔍 Возможные причины отсутствия задач:');
+        logger.info('   • В Bitrix24 нет задач');
+        logger.info('   • У вебхука нет прав на чтение задач (нужно право "task")');
+        logger.info('   • Задачи находятся в приватных группах/проектах');
+        logger.info('   • API задач недоступно в вашем тарифе Bitrix24');
+        
         setTasks([]);
         return { success: true, count: 0 };
       }
+      
+      // Показываем пример первой задачи для отладки
+      logger.group('=== ПРИМЕР ПЕРВОЙ ЗАДАЧИ ИЗ BITRIX24 ===', () => {
+        logger.debug('Ключи первой задачи:', Object.keys(allTasks[0]));
+        logger.debug('Полные данные первой задачи:', allTasks[0]);
+      });
 
       // Получаем информацию о всех пользователях
       const userIds = [...new Set([
@@ -740,24 +773,48 @@ export function useBitrixDeals() {
       };
 
       // Преобразуем данные Bitrix в формат Task
-      const bitrixTasks: Task[] = allTasks.map((task: any) => ({
-        ID: task.ID || task.id,
-        Название: task.TITLE || task.title || "",
-        Постановщик: userMap.get(String(task.CREATED_BY)) || task.CREATED_BY || "—",
-        Исполнитель: userMap.get(String(task.RESPONSIBLE_ID)) || task.RESPONSIBLE_ID || "—",
-        Статус: TASK_STATUS_MAPPING[String(task.STATUS)] || TASK_STATUS_MAPPING[String(task.status)] || "Неизвестно",
-        Приоритет: TASK_PRIORITY_MAPPING[String(task.PRIORITY)] || TASK_PRIORITY_MAPPING[String(task.priority)] || "Обычный",
-        "Дата создания": formatTaskDate(task.CREATED_DATE || task.createdDate),
-        "Дата закрытия": formatTaskDate(task.CLOSED_DATE || task.closedDate),
-        Описание: (task.DESCRIPTION || task.description || '').substring(0, MAX_TASK_DESCRIPTION_LENGTH) + 
-                  ((task.DESCRIPTION || task.description || '').length > MAX_TASK_DESCRIPTION_LENGTH ? '...' : '')
-      }));
+      logger.info('🔄 Обработка и нормализация данных задач...');
+      const bitrixTasks: Task[] = allTasks.map((task: any, index) => {
+        if (index === 0) {
+          logger.debug('🔍 Обработка первой задачи:', {
+            id: task.ID || task.id,
+            title: task.TITLE || task.title,
+            status: task.STATUS || task.status,
+            createdBy: task.CREATED_BY,
+            responsibleId: task.RESPONSIBLE_ID
+          });
+        }
+        
+        return {
+          ID: task.ID || task.id,
+          Название: task.TITLE || task.title || "",
+          Постановщик: userMap.get(String(task.CREATED_BY)) || task.CREATED_BY || "—",
+          Исполнитель: userMap.get(String(task.RESPONSIBLE_ID)) || task.RESPONSIBLE_ID || "—",
+          Статус: TASK_STATUS_MAPPING[String(task.STATUS)] || TASK_STATUS_MAPPING[String(task.status)] || "Неизвестно",
+          Приоритет: TASK_PRIORITY_MAPPING[String(task.PRIORITY)] || TASK_PRIORITY_MAPPING[String(task.priority)] || "Обычный",
+          "Дата создания": formatTaskDate(task.CREATED_DATE || task.createdDate),
+          "Дата закрытия": formatTaskDate(task.CLOSED_DATE || task.closedDate),
+          Описание: (task.DESCRIPTION || task.description || '').substring(0, MAX_TASK_DESCRIPTION_LENGTH) + 
+                    ((task.DESCRIPTION || task.description || '').length > MAX_TASK_DESCRIPTION_LENGTH ? '...' : '')
+        };
+      });
+      
+      logger.success(`✅ Обработано задач: ${bitrixTasks.length}`);
 
       setTasks(bitrixTasks);
+      logger.success(`🎯 Задачи установлены в состояние компонента: ${bitrixTasks.length}`);
 
       // 1. СОХРАНЯЕМ В SUPABASE (основное хранилище)
-      logger.info('💾 Сохранение задач в Supabase...');
-      const supabaseResult = await saveTasksToSupabase(bitrixTasks);
+      logger.info(`💾 Начинаем сохранение ${bitrixTasks.length} задач в Supabase...`);
+      
+      let supabaseResult;
+      try {
+        supabaseResult = await saveTasksToSupabase(bitrixTasks);
+        logger.info('📊 Результат сохранения задач в Supabase:', supabaseResult);
+      } catch (supabaseError) {
+        logger.error('❌ Критическая ошибка при сохранении задач в Supabase:', supabaseError);
+        supabaseResult = { success: false, error: String(supabaseError) };
+      }
 
       // 2. Сохраняем в localStorage для быстрого доступа (только если данные не слишком большие)
       try {

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, TestTube, Download, Database, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SchemaManager } from "@/components/SchemaManager";
+import { TasksDiagnostic } from "@/components/TasksDiagnostic";
 
 interface BitrixSettingsTabProps {
   onFetchDeals: (webhookUrl: string) => Promise<{ success: boolean; count: number }>;
@@ -155,7 +156,7 @@ export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettings
   return (
     <div className="space-y-4 max-w-4xl">
       <Tabs defaultValue="connection" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="connection" className="flex items-center gap-2">
             <Database className="w-4 h-4" />
             Подключение
@@ -163,6 +164,10 @@ export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettings
           <TabsTrigger value="schema" className="flex items-center gap-2">
             <Settings2 className="w-4 h-4" />
             Схема данных
+          </TabsTrigger>
+          <TabsTrigger value="diagnostic" className="flex items-center gap-2">
+            <TestTube className="w-4 h-4" />
+            Диагностика
           </TabsTrigger>
           <TabsTrigger value="automation" className="flex items-center gap-2">
             <Download className="w-4 h-4" />
@@ -244,6 +249,10 @@ export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettings
           <SchemaManager onSchemaUpdate={() => {
             console.log('Schema updated - refreshing data...');
           }} />
+        </TabsContent>
+
+        <TabsContent value="diagnostic" className="space-y-4">
+          <TasksDiagnostic />
         </TabsContent>
 
         <TabsContent value="automation" className="space-y-4">
