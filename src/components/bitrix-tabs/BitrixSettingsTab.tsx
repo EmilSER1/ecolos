@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, TestTube, Download } from "lucide-react";
+import { Save, TestTube, Download, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BitrixSettingsTabProps {
@@ -94,6 +94,62 @@ export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettings
     }
   };
 
+  const handleFetchAllData = async () => {
+    setFetching(true);
+    try {
+      toast({
+        title: "🚀 Начинаем полную синхронизацию",
+        description: "Загружаем сделки и задачи из Bitrix24...",
+      });
+
+      console.log('🔄 Начинаем загрузку всех данных...');
+      
+      // Загружаем сделки и задачи параллельно для ускорения
+      const [dealsResult, tasksResult] = await Promise.all([
+        onFetchDeals(webhookUrl).catch(error => {
+          console.error('❌ Ошибка загрузки сделок:', error);
+          return { success: false, count: 0 };
+        }),
+        onFetchTasks(webhookUrl).catch(error => {
+          console.error('❌ Ошибка загрузки задач:', error);
+          return { success: false, count: 0 };
+        })
+      ]);
+
+      // Показываем результат
+      const totalSuccess = dealsResult.success || tasksResult.success;
+      const totalCount = (dealsResult.count || 0) + (tasksResult.count || 0);
+
+      if (totalSuccess) {
+        toast({
+          title: "✅ Синхронизация завершена!",
+          description: `Загружено: ${dealsResult.count || 0} сделок, ${tasksResult.count || 0} задач. Всего: ${totalCount} записей.`,
+        });
+        console.log('✅ Полная синхронизация завершена:', {
+          deals: dealsResult.count || 0,
+          tasks: tasksResult.count || 0,
+          total: totalCount
+        });
+      } else {
+        toast({
+          title: "⚠️ Синхронизация завершена с ошибками",
+          description: "Не все данные удалось загрузить. Проверьте консоль для деталей.",
+          variant: "destructive"
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Критическая ошибка при загрузке всех данных:', error);
+      toast({
+        title: "❌ Ошибка синхронизации",
+        description: "Произошла критическая ошибка при загрузке данных",
+        variant: "destructive"
+      });
+    } finally {
+      setFetching(false);
+    }
+  };
+
   return (
     <div className="space-y-4 max-w-2xl">
       <Card>
@@ -118,6 +174,7 @@ export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettings
             </p>
           </div>
 
+          {/* Основные настройки */}
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleSave} className="bg-gradient-to-br from-orange-500 to-red-400">
               <Save className="mr-2 h-4 w-4" />
@@ -127,14 +184,38 @@ export function BitrixSettingsTab({ onFetchDeals, onFetchTasks }: BitrixSettings
               <TestTube className="mr-2 h-4 w-4" />
               {testing ? "Тестирование..." : "Проверить подключение"}
             </Button>
-            <Button onClick={handleFetchDeals} variant="outline" disabled={fetching}>
-              <Download className="mr-2 h-4 w-4" />
-              {fetching ? "Загрузка..." : "Загрузить сделки"}
+          </div>
+
+          {/* Загрузка данных */}
+          <div className="border-t pt-4 space-y-3">
+            <h4 className="font-medium text-sm text-muted-foreground">Загрузка данных</h4>
+            
+            {/* Основная кнопка */}
+            <Button 
+              onClick={handleFetchAllData} 
+              disabled={fetching} 
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3"
+              size="lg"
+            >
+              <Database className="mr-2 h-5 w-5" />
+              {fetching ? "🔄 Загружаем данные..." : "🚀 Загрузить все данные (сделки + задачи)"}
             </Button>
-            <Button onClick={handleFetchTasks} variant="outline" disabled={fetching}>
-              <Download className="mr-2 h-4 w-4" />
-              {fetching ? "Загрузка..." : "Загрузить задачи"}
-            </Button>
+
+            {/* Раздельные кнопки */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={handleFetchDeals} variant="outline" disabled={fetching} size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                {fetching ? "..." : "Только сделки"}
+              </Button>
+              <Button onClick={handleFetchTasks} variant="outline" disabled={fetching} size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                {fetching ? "..." : "Только задачи"}
+              </Button>
+            </div>
+            
+            <p className="text-xs text-muted-foreground text-center">
+              💡 Рекомендуется использовать "Загрузить все данные" для полной синхронизации
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -23,13 +23,14 @@ interface DashboardTabProps {
   tasks: Task[];
   onClearCache?: () => void;
   onRefresh?: () => void;
+  onFullSync?: () => void;
   snapshotStats?: any;
 }
 
 /**
  * Главный компонент дашборда с аналитикой сделок и задач
  */
-export function DashboardTab({ deals, tasks, onClearCache, onRefresh, snapshotStats }: DashboardTabProps) {
+export function DashboardTab({ deals, tasks, onClearCache, onRefresh, onFullSync, snapshotStats }: DashboardTabProps) {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
@@ -66,6 +67,7 @@ export function DashboardTab({ deals, tasks, onClearCache, onRefresh, snapshotSt
         <DataSyncStatus 
           onClearCache={onClearCache} 
           onRefresh={onRefresh}
+          onFullSync={onFullSync}
           snapshotStats={snapshotStats}
         />
         <div className="flex min-h-[300px] items-center justify-center">
@@ -83,6 +85,7 @@ export function DashboardTab({ deals, tasks, onClearCache, onRefresh, snapshotSt
       <DataSyncStatus 
         onClearCache={onClearCache} 
         onRefresh={onRefresh}
+        onFullSync={onFullSync}
         snapshotStats={snapshotStats}
       />
       

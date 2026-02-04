@@ -62,7 +62,7 @@ export function CRMHeader({
             ) : (
               <Download className="mr-2 h-4 w-4" />
             )}
-            {loading ? "Загрузка..." : "Загрузить данные"}
+            {loading ? "Загрузка..." : "Загрузить все данные"}
           </Button>
         )}
         

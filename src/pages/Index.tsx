@@ -50,6 +50,11 @@ const Index = () => {
 
     console.log('▶️ Начинаем загрузку данных с URL:', webhookUrl);
     
+    toast({
+      title: "🚀 Начинаем полную синхронизацию",
+      description: "Загружаем сделки и задачи из Bitrix24...",
+    });
+    
     try {
       // 1. Загружаем данные из Bitrix24 (они автоматически сохранятся в Supabase)
       const results = await Promise.all([
@@ -66,9 +71,10 @@ const Index = () => {
       logger.info('🔄 Обновление данных из Supabase...');
       await refreshSupabaseData();
       
+      const totalRecords = (results[0].count || 0) + (results[1].count || 0);
       toast({
-        title: "🎉 Данные успешно обновлены",
-        description: "Данные загружены из Bitrix24 и сохранены в базу. Аналитика обновлена.",
+        title: "🎉 Синхронизация завершена!",
+        description: `Загружено: ${results[0].count || 0} сделок, ${results[1].count || 0} задач. Всего: ${totalRecords} записей.`,
       });
       
     } catch (error) {
@@ -159,6 +165,7 @@ const Index = () => {
               refreshSupabaseData(); // Обновляем из Supabase
             }}
             onRefresh={refreshSupabaseData}
+            onFullSync={handleLoadData}
             snapshotStats={snapshotStats}
           />}
           {activeTab === "mismatch" && <MismatchTab deals={deals} />}

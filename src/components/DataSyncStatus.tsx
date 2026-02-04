@@ -8,10 +8,11 @@ import { STORAGE_KEYS } from "@/lib/bitrix-constants";
 interface DataSyncStatusProps {
   onRefresh?: () => void;
   onClearCache?: () => void;
+  onFullSync?: () => void;
   snapshotStats?: any;
 }
 
-export function DataSyncStatus({ onRefresh, onClearCache, snapshotStats }: DataSyncStatusProps) {
+export function DataSyncStatus({ onRefresh, onClearCache, onFullSync, snapshotStats }: DataSyncStatusProps) {
   const [syncStatus, setSyncStatus] = useState({
     dealsCount: 0,
     tasksCount: 0,
@@ -99,6 +100,16 @@ export function DataSyncStatus({ onRefresh, onClearCache, snapshotStats }: DataS
             </CardDescription>
           </div>
           <div className="flex gap-2">
+            {onFullSync && (
+              <Button
+                size="sm"
+                onClick={onFullSync}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
+                <Database className="w-4 h-4" />
+                Синхронизация
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
